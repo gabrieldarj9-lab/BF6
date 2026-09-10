@@ -17,7 +17,7 @@ async function main() {
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
   try {
-    // 1. The executable HTTP server also exposes the UI shell.
+    // 1. The executable HTTP server still exposes the existing product UI unchanged.
     {
       const response = await fetch(`${baseUrl}/`);
       const html = await response.text();
@@ -25,12 +25,14 @@ async function main() {
       assert.ok(response.headers.get("content-type")?.includes("text/html"));
       assert.ok(html.includes('id="root"'));
       assert.ok(html.includes('/assets/app.js'));
+      assert.ok(html.includes('/assets/styles.css'));
+      assert.ok(html.includes('/assets/system.css'));
       assert.ok(html.includes('cdn.tailwindcss.com/3.4.17'));
       assert.ok(html.includes('react@18.3.1'));
       assert.ok(response.headers.get("content-security-policy")?.includes("unpkg.com"));
     }
 
-    // 2. Compiled React/TypeScript UI is served by the same process.
+    // 2. Compiled product React/TypeScript UI is served by the same process.
     {
       const response = await fetch(`${baseUrl}/assets/app.js`);
       const js = await response.text();
@@ -42,7 +44,7 @@ async function main() {
       assert.ok(js.includes("/v1/metrics"));
     }
 
-    // 3. Design-system tokens and required interaction states are present.
+    // 3. Design-system foundation tokens and required interaction states remain present.
     {
       const response = await fetch(`${baseUrl}/assets/styles.css`);
       const css = await response.text();
@@ -55,7 +57,54 @@ async function main() {
       assert.ok(!css.includes("backdrop-filter"), "V1 UI must not use glass/blur effects.");
     }
 
-    // 4. The UI receives a transport-safe request fixture from the server.
+    // 4. Shared component stylesheet is loaded by both product and showcase.
+    {
+      const response = await fetch(`${baseUrl}/assets/system.css`);
+      const css = await response.text();
+      assert.equal(response.status, 200);
+      assert.ok(css.includes("--font-size-display"));
+      assert.ok(css.includes(".ui-button"));
+      assert.ok(css.includes(".ui-field"));
+      assert.ok(css.includes(".ui-card"));
+      assert.ok(css.includes(".ui-tooltip"));
+      assert.ok(css.includes(".ui-skeleton"));
+      assert.ok(css.includes("prefers-reduced-motion"));
+      assert.ok(!css.includes("backdrop-filter"), "Shared UI must not introduce glass/blur effects.");
+      assert.ok(!css.includes("linear-gradient"), "Shared UI must not introduce decorative gradients.");
+    }
+
+    // 5. /design-system has its own document shell but consumes the shared CSS.
+    {
+      const response = await fetch(`${baseUrl}/design-system`);
+      const html = await response.text();
+      assert.equal(response.status, 200);
+      assert.ok(response.headers.get("content-type")?.includes("text/html"));
+      assert.ok(html.includes('/assets/styles.css'));
+      assert.ok(html.includes('/assets/system.css'));
+      assert.ok(html.includes('/assets/design-system.js'));
+      assert.ok(!html.includes('/assets/app.js'));
+      assert.ok(response.headers.get("content-security-policy")?.includes("unpkg.com"));
+    }
+
+    // 6. Showcase bundle contains documentation/components and no product API calls.
+    {
+      const response = await fetch(`${baseUrl}/assets/design-system.js`);
+      const js = await response.text();
+      assert.equal(response.status, 200);
+      assert.ok(response.headers.get("content-type")?.includes("application/javascript"));
+      assert.ok(js.includes("BF6 Builds Design System"));
+      assert.ok(js.includes("Colors"));
+      assert.ok(js.includes("Typography"));
+      assert.ok(js.includes("Composition"));
+      assert.ok(js.includes("function Button"));
+      assert.ok(js.includes("function TextField"));
+      assert.ok(js.includes("function Card"));
+      assert.ok(!js.includes("/v1/progression"), "Design-system showcase must not call progression API.");
+      assert.ok(!js.includes("/v1/metrics"), "Design-system showcase must not call metrics API.");
+      assert.ok(!js.includes("generateProgression"), "Design-system showcase must not include product build logic.");
+    }
+
+    // 7. The product UI still receives a transport-safe request fixture from the server.
     let demoRequest: any;
     {
       const response = await fetch(`${baseUrl}/v1/demo-request`);
@@ -67,7 +116,7 @@ async function main() {
       assert.ok(!("evaluateStructuralMajor" in demoRequest));
     }
 
-    // 5. Same request consumed by the browser succeeds through the real E2E endpoint.
+    // 8. Same request consumed by the product browser succeeds through the real E2E endpoint.
     {
       const response = await fetch(`${baseUrl}/v1/progression`, {
         method: "POST",
