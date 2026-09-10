@@ -7,10 +7,10 @@
   "scripts": {
     "typecheck": "npm run typecheck:server && npm run typecheck:ui",
     "typecheck:server": "tsc --noEmit -p tsconfig.json",
-    "typecheck:ui": "tsc --noEmit -p frontend/tsconfig.json",
+    "typecheck:ui": "tsc --noEmit -p frontend/tsconfig.json && tsc --noEmit -p frontend/tsconfig.design-system.json",
     "build": "npm run build:server && npm run build:ui",
     "build:server": "tsc -p tsconfig.json",
-    "build:ui": "tsc -p frontend/tsconfig.json",
+    "build:ui": "tsc -p frontend/tsconfig.json && tsc -p frontend/tsconfig.design-system.json",
     "test": "npm run build && node dist/tests/integration.test.js && node dist/tests/http.integration.test.js && node dist/tests/ui.integration.test.js",
     "test:http": "npm run build && node dist/tests/http.integration.test.js",
     "test:ui": "npm run build && node dist/tests/ui.integration.test.js",
