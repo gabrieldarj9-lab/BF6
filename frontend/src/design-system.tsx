@@ -1,4 +1,98 @@
-const DS_SECTIONS = [
+import { useState } from "react"
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  CircleHelp,
+  Copy,
+  Info,
+  Menu,
+  MoreHorizontal,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  ShieldAlert,
+  Trash2,
+  X,
+} from "lucide-react"
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+const SECTIONS = [
   ["overview", "Overview"],
   ["colors", "Colors"],
   ["typography", "Typography"],
@@ -16,264 +110,349 @@ const DS_SECTIONS = [
   ["tables", "Tables"],
   ["tooltips", "Tooltips"],
   ["overlays", "Overlays"],
-  ["progress", "Progress"],
+  ["feedback", "Feedback"],
   ["loading", "Loading"],
   ["empty", "Empty States"],
-  ["feedback", "Feedback"],
   ["states", "States"],
   ["composition", "Composition"],
-] as const;
+] as const
 
-const COLOR_TOKENS = [
+const COLORS = [
   ["Background", "--background"],
-  ["Surface", "--surface"],
-  ["Surface Elevated", "--surface-elevated"],
-  ["Surface Hover", "--surface-hover"],
+  ["Surface", "--card"],
+  ["Surface Elevated", "--popover"],
   ["Border", "--border"],
-  ["Border Strong", "--border-strong"],
-  ["Text Primary", "--text-primary"],
-  ["Text Secondary", "--text-secondary"],
-  ["Text Muted", "--text-muted"],
-  ["Accent", "--accent"],
-  ["Positive", "--positive"],
-  ["Warning", "--warning"],
-  ["Negative", "--negative"],
-  ["Disabled", "--disabled"],
-] as const;
+  ["Text Primary", "--foreground"],
+  ["Text Secondary", "--bf-text-secondary"],
+  ["Text Muted", "--bf-text-muted"],
+  ["Accent", "--primary"],
+  ["Positive", "--bf-positive"],
+  ["Warning", "--bf-warning"],
+  ["Negative", "--destructive"],
+  ["Disabled", "--bf-disabled"],
+] as const
 
-const SPACING_TOKENS = [
-  ["space-1", "--space-1"], ["space-2", "--space-2"], ["space-3", "--space-3"],
-  ["space-4", "--space-4"], ["space-5", "--space-5"], ["space-6", "--space-6"],
-  ["space-8", "--space-8"], ["space-10", "--space-10"], ["space-12", "--space-12"],
-] as const;
+const SPACING = [
+  ["1", "4 px", "w-1"],
+  ["2", "8 px", "w-2"],
+  ["3", "12 px", "w-3"],
+  ["4", "16 px", "w-4"],
+  ["5", "20 px", "w-5"],
+  ["6", "24 px", "w-6"],
+  ["8", "32 px", "w-8"],
+  ["10", "40 px", "w-10"],
+  ["12", "48 px", "w-12"],
+] as const
 
-const SELECT_OPTIONS = [
-  { value: "assault", label: "Fuzil de assalto" },
-  { value: "smg", label: "SMG" },
-  { value: "dmr", label: "DMR" },
-];
-
-function tokenValue(name: string): string {
-  if (typeof window === "undefined") return "";
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-function DsSection(props: { id: string; title: string; description: string; children: any }) {
+function Section({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="ds-section" id={props.id} aria-labelledby={`${props.id}-title`}>
-      <div className="ds-section-head">
-        <h2 id={`${props.id}-title`}>{props.title}</h2>
-        <p>{props.description}</p>
+    <section id={id} className="scroll-mt-20 border-t py-10 first:border-t-0 first:pt-0">
+      <div className="mb-6 max-w-3xl">
+        <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
-      {props.children}
+      {children}
     </section>
-  );
+  )
 }
 
-function DsExample(props: { title: string; children: any }) {
-  return <div className="ds-example"><div className="ds-example-title">{props.title}</div>{props.children}</div>;
-}
-
-function ColorToken(props: { label: string; token: string }) {
+function Example({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="ds-color">
-      <div className="ds-color-swatch" style={{ "--swatch": `var(${props.token})` } as any}></div>
-      <div className="ds-color-meta"><strong>{props.label}</strong><code>{props.token}</code><code>{tokenValue(props.token)}</code></div>
+    <div className={`mb-4 rounded-lg border bg-card ${className}`}>
+      <div className="border-b px-4 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </div>
-  );
+  )
 }
 
-function TypeSample(props: { type: string; name: string; example: string; meta: string }) {
+function ColorSwatch({ label, token }: { label: string; token: string }) {
   return (
-    <div className="ds-type-sample">
-      <div className="ds-type-name">{props.name}</div>
-      <div className="ds-type-example" data-type={props.type}>{props.example}</div>
-      <div className="ds-type-meta">{props.meta}</div>
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="h-20 border-b" style={{ background: `var(${token})` }} />
+      <div className="space-y-1 p-3">
+        <p className="text-sm font-medium">{label}</p>
+        <code className="block text-[11px] text-muted-foreground">{token}</code>
+      </div>
     </div>
-  );
+  )
 }
 
-function DesignSystemPage() {
-  const [searchValue, setSearchValue] = React.useState("");
-  const [filledSearch, setFilledSearch] = React.useState("M4A1");
-
-  React.useEffect(() => {
-    document.title = "BF6 Builds — Design System";
-    return () => { document.title = "BF6 Builds — V1"; };
-  }, []);
-
+function Field({ label, helper, error, ...props }: React.ComponentProps<typeof Input> & { label: string; helper?: string; error?: string }) {
+  const id = `showcase-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
   return (
-    <div className="ds-page">
-      <header className="ds-topbar">
-        <a href="/" aria-label="Voltar para BF6 Builds">← Produto</a>
-        <div className="brand-wordmark">BF6 <span>/ DESIGN SYSTEM</span></div>
-        <StatusBadge tone="warning">Work in progress</StatusBadge>
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} aria-invalid={Boolean(error)} {...props} />
+      {error ? <p className="text-xs text-destructive">{error}</p> : helper ? <p className="text-xs text-muted-foreground">{helper}</p> : null}
+    </div>
+  )
+}
+
+function SearchExample() {
+  const [value, setValue] = useState("M4A1")
+  return (
+    <div className="grid max-w-md gap-2">
+      <Label htmlFor="showcase-search">Buscar</Label>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input id="showcase-search" value={value} onChange={(event) => setValue(event.target.value)} placeholder="Buscar arma" className="pl-9 pr-9" />
+        {value ? (
+          <Button type="button" variant="ghost" size="icon-xs" className="absolute right-1.5 top-1/2 -translate-y-1/2" aria-label="Limpar busca" onClick={() => setValue("")}>
+            <X />
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function DesignSystemPage() {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <a href="#overview" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">Ir para o conteúdo</a>
+
+      <header className="sticky top-0 z-50 border-b bg-background">
+        <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
+          <Button variant="ghost" size="sm" asChild><a href="/">← Produto</a></Button>
+          <Separator orientation="vertical" className="h-5" />
+          <span className="text-sm font-semibold">BF6 / Design System</span>
+          <div className="ml-auto"><Badge variant="outline">Work in progress</Badge></div>
+        </div>
       </header>
 
-      <div className="ds-layout">
-        <nav className="ds-nav" aria-label="Seções do Design System">
-          <div className="ds-nav-title">Índice</div>
-          {DS_SECTIONS.map(([id, label]) => <a href={`#${id}`} key={id}>{label}</a>)}
-        </nav>
+      <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="border-b bg-background lg:min-h-[calc(100vh-3.5rem)] lg:border-r lg:border-b-0">
+          <nav className="flex gap-1 overflow-x-auto p-3 lg:sticky lg:top-14 lg:block lg:p-4" aria-label="Índice do Design System">
+            <p className="mb-2 hidden px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:block">Índice</p>
+            {SECTIONS.map(([id, label]) => (
+              <Button key={id} variant="ghost" size="sm" className="shrink-0 justify-start lg:mb-0.5 lg:w-full" asChild>
+                <a href={`#${id}`}>{label}</a>
+              </Button>
+            ))}
+          </nav>
+        </aside>
 
-        <main className="ds-main" id="main-content">
-          <div className="ds-content">
-            <section className="ds-overview" id="overview">
-              <div className="eyebrow">Referência visual central · UI V1</div>
-              <div className="ds-overview-row"><h1>BF6 Builds Design System</h1><StatusBadge tone="accent">Visual 0.2</StatusBadge></div>
-              <p>Documentação viva dos tokens, primitives, componentes e padrões usados pelo projeto. Esta página não contém regras de build, dados reais ou chamadas de API.</p>
-            </section>
+        <main className="min-w-0 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+          <div className="mx-auto max-w-6xl">
+            <Section id="overview" title="BF6 Builds Design System" description="Documentação visual viva dos tokens e componentes reais usados pelo frontend. Os componentes desta página vêm de frontend/src/components/ui e foram gerados pelo CLI oficial do shadcn/ui.">
+              <div className="flex flex-wrap gap-2">
+                <Badge>shadcn/ui</Badge>
+                <Badge variant="secondary">New York</Badge>
+                <Badge variant="outline">Radix UI</Badge>
+                <Badge variant="outline">Tailwind CSS v4</Badge>
+                <Badge variant="outline">Lucide</Badge>
+              </div>
+            </Section>
 
-            <DsSection id="colors" title="Colors" description="Tokens semânticos atuais. Os valores exibidos são lidos diretamente das custom properties carregadas pelo produto.">
-              <DsExample title="Semantic color tokens"><div className="ds-grid four">{COLOR_TOKENS.map(([label, token]) => <ColorToken key={token} label={label} token={token}/>)}</div></DsExample>
-            </DsSection>
+            <Section id="colors" title="Colors" description="Paleta semântica consumida pelos componentes shadcn e aliases específicos do BF6. Não há cores extras criadas apenas para o showcase.">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {COLORS.map(([label, token]) => <ColorSwatch key={token} label={label} token={token} />)}
+              </div>
+            </Section>
 
-            <DsSection id="typography" title="Typography" description="Escala tipográfica formalizada a partir da linguagem já usada pela interface: sans para conteúdo e mono para dados/metadados.">
-              <DsExample title="Type scale">
-                <TypeSample type="display" name="Display" example="M4A1" meta={`sans · ${tokenValue("--font-size-display")} · ${tokenValue("--font-weight-display")} · LH ${tokenValue("--line-height-display")}`}/>
-                <TypeSample type="heading" name="Heading" example="Build recomendada" meta={`sans · ${tokenValue("--font-size-heading")} · ${tokenValue("--font-weight-heading")} · LH ${tokenValue("--line-height-heading")}`}/>
-                <TypeSample type="title" name="Title" example="Controle de recuo" meta={`sans · ${tokenValue("--font-size-title")} · ${tokenValue("--font-weight-title")} · LH ${tokenValue("--line-height-title")}`}/>
-                <TypeSample type="body" name="Body" example="Configuração fictícia para avaliar legibilidade." meta={`sans · ${tokenValue("--font-size-body")} · ${tokenValue("--font-weight-body")} · LH ${tokenValue("--line-height-body")}`}/>
-                <TypeSample type="label" name="Label" example="Sua maestria" meta={`sans · ${tokenValue("--font-size-label")} · ${tokenValue("--font-weight-label")} · LH ${tokenValue("--line-height-label")}`}/>
-                <TypeSample type="caption" name="Caption" example="Resolver + derived" meta={`sans · ${tokenValue("--font-size-caption")} · ${tokenValue("--font-weight-caption")} · LH ${tokenValue("--line-height-caption")}`}/>
-                <TypeSample type="data" name="Data / Numeric" example="742.5" meta={`mono · ${tokenValue("--font-size-data")} · ${tokenValue("--font-weight-data")} · tabular nums`}/>
-              </DsExample>
-            </DsSection>
+            <Section id="typography" title="Typography" description="A escala usa as utilities tipográficas reais do Tailwind aplicadas no produto. Sans para conteúdo, mono para dados e identificadores.">
+              <Example title="Type scale">
+                <div className="divide-y">
+                  {[
+                    ["Display", "text-4xl / 36 px · 700", <span className="text-4xl font-bold tracking-tight">M4A1</span>],
+                    ["Heading", "text-2xl / 24 px · 600", <span className="text-2xl font-semibold tracking-tight">Build recomendada</span>],
+                    ["Title", "text-base / 16 px · 600", <span className="text-base font-semibold">Controle de recuo</span>],
+                    ["Body", "text-sm / 14 px · 400", <span className="text-sm">Configuração fictícia para avaliar legibilidade.</span>],
+                    ["Label", "text-sm / 14 px · 500", <span className="text-sm font-medium">Sua maestria</span>],
+                    ["Caption", "text-xs / 12 px · 400", <span className="text-xs text-muted-foreground">Resolver + derived</span>],
+                    ["Data / Numeric", "mono · text-xl · tabular", <span className="font-data text-xl font-semibold">742.5</span>],
+                  ].map(([name, meta, sample]) => (
+                    <div key={String(name)} className="grid gap-3 py-4 md:grid-cols-[160px_1fr_220px] md:items-center">
+                      <span className="text-xs font-medium text-muted-foreground">{name}</span>
+                      <div>{sample}</div>
+                      <code className="text-[11px] text-muted-foreground">{meta}</code>
+                    </div>
+                  ))}
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="spacing" title="Spacing" description="Escala única de 4 a 48 px. A visualização ajuda a identificar valores que escapem da progressão definida.">
-              <DsExample title="Spacing scale"><div className="ds-spacing-list">{SPACING_TOKENS.map(([label, token]) => <div className="ds-spacing-row" key={token}><code>{label}</code><span className="ds-token-code">{tokenValue(token)}</span><span className="ds-spacing-bar" style={{ "--spacing-width": `var(${token})` } as any}/></div>)}</div></DsExample>
-            </DsSection>
+            <Section id="spacing" title="Spacing" description="Escala utilizada pelo Tailwind no projeto. A representação gráfica usa as próprias utilities de largura correspondentes.">
+              <Example title="Spacing scale">
+                <div className="space-y-3">
+                  {SPACING.map(([name, value, widthClass]) => (
+                    <div key={name} className="grid grid-cols-[48px_64px_1fr] items-center gap-3">
+                      <code className="text-xs">{name}</code>
+                      <span className="text-xs text-muted-foreground">{value}</span>
+                      <div className={`h-3 ${widthClass} bg-primary`} />
+                    </div>
+                  ))}
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="surfaces" title="Surfaces" description="Profundidade é construída por contraste de superfície e borda, sem glassmorphism, blur ou sombras decorativas.">
-              <DsExample title="Surface levels"><div className="ds-grid four">
-                <div className="ds-surface-demo" style={{ "--demo-surface": "var(--background)" } as any}><div><strong>Background</strong><p>Plano principal da aplicação.</p></div><code>--background</code></div>
-                <div className="ds-surface-demo" style={{ "--demo-surface": "var(--surface)" } as any}><div><strong>Surface</strong><p>Blocos e agrupamentos padrão.</p></div><code>--surface</code></div>
-                <div className="ds-surface-demo" style={{ "--demo-surface": "var(--surface-elevated)" } as any}><div><strong>Elevated</strong><p>Controles e conteúdo em destaque.</p></div><code>--surface-elevated</code></div>
-                <div className="ds-surface-demo" data-selected="true" style={{ "--demo-surface": "var(--surface-hover)" } as any}><div><strong>Selected</strong><p>Exemplo com borda de accent.</p></div><code>surface-hover + accent</code></div>
-              </div></DsExample>
-            </DsSection>
+            <Section id="surfaces" title="Surfaces" description="Os níveis reais são background, card e popover. Selected usa o mesmo accent/primary do sistema, sem um quarto sistema paralelo de superfícies.">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border bg-background p-5"><strong className="text-sm">Background</strong><p className="mt-2 text-xs text-muted-foreground">Plano principal.</p></div>
+                <div className="rounded-lg border bg-card p-5"><strong className="text-sm">Card / Surface</strong><p className="mt-2 text-xs text-muted-foreground">Agrupamento padrão.</p></div>
+                <div className="rounded-lg border bg-popover p-5 shadow-md"><strong className="text-sm">Popover / Elevated</strong><p className="mt-2 text-xs text-muted-foreground">Conteúdo flutuante.</p></div>
+                <div className="rounded-lg border border-primary bg-primary/5 p-5"><strong className="text-sm">Selected</strong><p className="mt-2 text-xs text-muted-foreground">Accent + superfície existente.</p></div>
+              </div>
+            </Section>
 
-            <DsSection id="borders" title="Borders & Radius" description="Bordas têm 1 px; a variação vem da força da cor. Radius permanece contido em 2, 4 e 6 px.">
-              <DsExample title="Border colors"><div className="ds-grid two">
-                <div className="ds-border-demo" style={{ "--demo-border": "var(--border)" } as any}>--border<br/>{tokenValue("--border")}</div>
-                <div className="ds-border-demo" style={{ "--demo-border": "var(--border-strong)" } as any}>--border-strong<br/>{tokenValue("--border-strong")}</div>
-              </div></DsExample>
-              <DsExample title="Radius"><div className="ds-grid">
-                <div className="ds-border-demo" style={{ "--demo-radius": "var(--radius-sm)" } as any}>sm · {tokenValue("--radius-sm")}</div>
-                <div className="ds-border-demo" style={{ "--demo-radius": "var(--radius-md)" } as any}>md · {tokenValue("--radius-md")}</div>
-                <div className="ds-border-demo" style={{ "--demo-radius": "var(--radius-lg)" } as any}>lg · {tokenValue("--radius-lg")}</div>
-              </div></DsExample>
-            </DsSection>
+            <Section id="borders" title="Borders & Radius" description="Bordas usam border/input/ring do tema. Radius parte de --radius e alimenta as utilities usadas pelos componentes shadcn.">
+              <Example title="Radius">
+                <div className="grid gap-3 sm:grid-cols-4">
+                  <div className="rounded-sm border p-5 text-sm">rounded-sm</div>
+                  <div className="rounded-md border p-5 text-sm">rounded-md</div>
+                  <div className="rounded-lg border p-5 text-sm">rounded-lg</div>
+                  <div className="rounded-xl border p-5 text-sm">rounded-xl</div>
+                </div>
+              </Example>
+              <Example title="Border & ring"><div className="flex flex-wrap gap-3"><div className="rounded-md border p-4 text-sm">Border</div><div className="rounded-md border border-input p-4 text-sm">Input border</div><Button variant="outline">Focus com Tab</Button></div></Example>
+            </Section>
 
-            <DsSection id="icons" title="Icons" description="Família interna única de ícones lineares, 1.8 px de stroke, usada pelos primitives sem dependência visual externa.">
-              <DsExample title="Icon library"><div className="ds-icon-grid">{(["search","close","chevron-down","check","info","warning","plus","settings","arrow-right","refresh"] as IconName[]).map((name) => <div className="ds-icon-item" key={name}><Icon name={name} size={18}/><code>{name}</code></div>)}</div></DsExample>
-              <DsExample title="Sizes & button use"><div className="ds-row"><Icon name="settings" size={14}/><Icon name="settings" size={16}/><Icon name="settings" size={20}/><Button size="icon" variant="secondary" icon="settings" ariaLabel="Configurações"/><Button variant="secondary" icon="plus">Adicionar</Button></div></DsExample>
-            </DsSection>
+            <Section id="icons" title="Icons" description="Lucide é a única família de ícones do frontend. Os próprios componentes shadcn também importam Lucide quando precisam de affordances internas.">
+              <Example title="Representative icons">
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 lg:grid-cols-10">
+                  {[
+                    ["Search", Search], ["X", X], ["Chevron", ChevronDown], ["Check", Check], ["Info", Info],
+                    ["Alert", AlertCircle], ["Plus", Plus], ["Settings", Settings], ["Arrow", ArrowRight], ["Refresh", RefreshCw],
+                  ].map(([name, Icon]) => (
+                    <div key={String(name)} className="grid place-items-center gap-2 rounded-lg border p-3 text-center">
+                      {typeof Icon !== "string" ? <Icon className="size-5" /> : null}
+                      <code className="text-[10px] text-muted-foreground">{String(name)}</code>
+                    </div>
+                  ))}
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="buttons" title="Buttons" description="Quatro variantes, tamanhos compactos e icon-only. Hover, focus e active são estados reais: interaja com os exemplos.">
-              <DsExample title="Variants"><div className="ds-row"><Button>Primary</Button><Button variant="secondary">Secondary</Button><Button variant="ghost">Ghost</Button><Button variant="destructive">Destructive</Button><Button size="icon" variant="secondary" icon="settings" ariaLabel="Configurações"/></div></DsExample>
-              <DsExample title="Content"><div className="ds-row"><Button icon="plus">Ícone + texto</Button><Button variant="secondary">Somente texto</Button><Button size="icon" variant="ghost" icon="refresh" ariaLabel="Atualizar"/></div></DsExample>
-              <DsExample title="States"><div className="ds-control-grid"><div className="ds-control-cell"><span className="ds-control-label">Default / Hover / Focus / Active</span><Button variant="secondary">Interaja comigo</Button></div><div className="ds-control-cell"><span className="ds-control-label">Disabled</span><Button disabled>Indisponível</Button></div><div className="ds-control-cell"><span className="ds-control-label">Loading</span><Button loading>Carregando</Button></div></div></DsExample>
-            </DsSection>
+            <Section id="buttons" title="Buttons" description="Variantes e tamanhos diretamente do Button gerado pelo shadcn. Hover, focus e active são estados reais; use mouse e teclado.">
+              <Example title="Variants"><div className="flex flex-wrap gap-2"><Button>Default</Button><Button variant="secondary">Secondary</Button><Button variant="outline">Outline</Button><Button variant="ghost">Ghost</Button><Button variant="destructive">Destructive</Button><Button variant="link">Link</Button></div></Example>
+              <Example title="Sizes & icons"><div className="flex flex-wrap items-center gap-2"><Button size="xs">XS</Button><Button size="sm">Small</Button><Button>Default</Button><Button size="lg">Large</Button><Button><Plus />Adicionar</Button><Button variant="outline" size="icon" aria-label="Configurações"><Settings /></Button></div></Example>
+              <Example title="Disabled"><div className="flex flex-wrap gap-2"><Button disabled>Disabled</Button><Button variant="outline" disabled><RefreshCw />Carregando</Button></div></Example>
+            </Section>
 
-            <DsSection id="inputs" title="Inputs" description="Input único com label obrigatória, helper, erro, disabled e ícone opcional. Focus usa a mesma cor de accent do sistema.">
-              <DsExample title="Input states"><div className="ds-control-grid">
-                <TextField label="Default" placeholder="Digite um valor" helper="Texto auxiliar curto."/>
-                <TextField label="Filled" defaultValue="Maestria 12" helper="Valor preenchido."/>
-                <TextField label="Com ícone" icon="search" defaultValue="M4A1"/>
-                <TextField label="Error" defaultValue="999" error="Valor fora do intervalo permitido."/>
-                <TextField label="Disabled" defaultValue="Bloqueado" disabled/>
-              </div></DsExample>
-            </DsSection>
+            <Section id="inputs" title="Inputs" description="Input e Label são os componentes reais do registry. Error usa aria-invalid, que o componente shadcn já estiliza no primitive.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Example title="Default"><Field label="Nome" placeholder="Digite um nome" helper="Helper text curto." /></Example>
+                <Example title="Filled"><Field label="Maestria" defaultValue="12" /></Example>
+                <Example title="Error"><Field label="Valor" defaultValue="999" error="Valor fora do intervalo." /></Example>
+                <Example title="Disabled"><Field label="Bloqueado" defaultValue="Indisponível" disabled /></Example>
+              </div>
+            </Section>
 
-            <DsSection id="search" title="Search" description="Busca compartilha o primitive de input e adiciona ícone e ação de limpar sem criar uma linguagem visual paralela.">
-              <DsExample title="Search field"><div className="ds-grid two"><SearchField value={searchValue} onChange={setSearchValue} label="Busca vazia" placeholder="Buscar arma"/><SearchField value={filledSearch} onChange={setFilledSearch} label="Busca preenchida" placeholder="Buscar arma"/></div></DsExample>
-            </DsSection>
+            <Section id="search" title="Search" description="Busca é uma composição de Input + Button + Lucide; não existe um segundo primitive de input criado só para ela.">
+              <Example title="Interactive search"><SearchExample /></Example>
+            </Section>
 
-            <DsSection id="selects" title="Selects" description="A V1 possui Select nativo estilizado. Combobox pesquisável ainda não faz parte do sistema e não é simulado aqui.">
-              <DsExample title="Select states"><div className="ds-control-grid"><SelectField label="Default" options={SELECT_OPTIONS}/><SelectField label="Selecionado" options={SELECT_OPTIONS} defaultValue="dmr" helper="Seleção fictícia."/><SelectField label="Disabled" options={SELECT_OPTIONS} disabled/></div></DsExample>
-            </DsSection>
+            <Section id="selects" title="Selects" description="Select usa o componente shadcn sobre Radix UI. O menu abaixo é interativo e mantém foco/teclado do primitive original.">
+              <Example title="Select states">
+                <div className="flex flex-wrap gap-4">
+                  <Select defaultValue="assault"><SelectTrigger className="w-[220px]"><SelectValue placeholder="Classe" /></SelectTrigger><SelectContent><SelectItem value="assault">Fuzil de assalto</SelectItem><SelectItem value="smg">SMG</SelectItem><SelectItem value="dmr">DMR</SelectItem></SelectContent></Select>
+                  <Select disabled><SelectTrigger className="w-[220px]"><SelectValue placeholder="Disabled" /></SelectTrigger><SelectContent><SelectItem value="x">Opção</SelectItem></SelectContent></Select>
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="tabs" title="Tabs" description="Tabs horizontais com active underline. Hover e focus podem ser avaliados diretamente; disabled permanece no mesmo grupo visual.">
-              <DsExample title="Interactive tabs"><Tabs items={[{ id: "build", label: "Build", content: "Painel fictício de build." },{ id: "metrics", label: "Métricas", content: "Painel fictício de métricas." },{ id: "locked", label: "Bloqueado", disabled: true, content: "" }]}/></DsExample>
-            </DsSection>
+            <Section id="tabs" title="Tabs" description="Tabs usa o componente shadcn/Radix sem uma implementação local paralela.">
+              <Example title="Interactive tabs">
+                <Tabs defaultValue="build" className="max-w-xl">
+                  <TabsList><TabsTrigger value="build">Build</TabsTrigger><TabsTrigger value="metrics">Métricas</TabsTrigger><TabsTrigger value="locked" disabled>Bloqueado</TabsTrigger></TabsList>
+                  <TabsContent value="build" className="pt-3 text-sm text-muted-foreground">Conteúdo fictício da build.</TabsContent>
+                  <TabsContent value="metrics" className="pt-3 text-sm text-muted-foreground">Conteúdo fictício de métricas.</TabsContent>
+                </Tabs>
+              </Example>
+            </Section>
 
-            <DsSection id="badges" title="Badges" description="Uma única família de badge com tons semânticos. Accent é destaque de produto; estados de feedback usam os tons semânticos.">
-              <DsExample title="Semantic tones"><div className="ds-row"><StatusBadge>Neutral</StatusBadge><StatusBadge tone="info">Info</StatusBadge><StatusBadge tone="accent">Accent</StatusBadge><StatusBadge tone="positive">Positive</StatusBadge><StatusBadge tone="warning">Warning</StatusBadge><StatusBadge tone="negative">Negative</StatusBadge></div></DsExample>
-            </DsSection>
+            <Section id="badges" title="Badges" description="Variantes oficiais do Badge. Estados semânticos adicionais reutilizam os tokens BF6 sem criar um novo componente.">
+              <Example title="Variants"><div className="flex flex-wrap gap-2"><Badge>Default</Badge><Badge variant="secondary">Secondary</Badge><Badge variant="outline">Outline</Badge><Badge variant="ghost">Ghost</Badge><Badge variant="destructive">Destructive</Badge><Badge variant="outline" className="text-[var(--bf-positive)]">Positive</Badge><Badge variant="outline" className="text-[var(--bf-warning)]">Warning</Badge></div></Example>
+            </Section>
 
-            <DsSection id="cards" title="Cards" description="Cards existem como agrupamento quando o conteúdo pede unidade. O sistema evita transformar toda informação em cards.">
-              <DsExample title="Card uses"><div className="ds-grid">
-                <Card title="Basic Card" body="Conteúdo curto e estático." badge={<StatusBadge>Base</StatusBadge>}/>
-                <Card interactive title="Interactive Card" body="Passe o mouse e navegue por teclado." footer={<span className="ds-token-code">Ação implícita</span>}/>
-                <Card interactive selected title="Selected Card" body="Estado selecionado usa accent na borda." badge={<StatusBadge tone="accent">Selected</StatusBadge>}/>
-                <Card title="Card with image" body="Mídia compacta, sem dominar o conteúdo." media={<div className="ds-thumb">Thumbnail</div>}/>
-                <Card title="Card without image" body="A mesma estrutura funciona sem mídia." footer={<Button variant="ghost" size="sm" icon="arrow-right">Abrir</Button>}/>
-                <Card interactive disabled title="Disabled Card" body="Interação indisponível com redução de ênfase."/>
-              </div></DsExample>
-            </DsSection>
+            <Section id="cards" title="Cards" description="Card, CardHeader, CardContent, CardFooter e CardAction são exatamente os primitives do shadcn instalados no projeto.">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <Card><CardHeader><CardTitle>Basic Card</CardTitle><CardDescription>Conteúdo simples.</CardDescription></CardHeader><CardContent><p className="text-sm">Informação curta e objetiva.</p></CardContent></Card>
+                <Card className="border-primary"><CardHeader><CardTitle>Selected Card</CardTitle><CardDescription>Seleção usa border-primary.</CardDescription></CardHeader><CardContent><Badge>Selecionado</Badge></CardContent></Card>
+                <Card><div className="mx-6 h-24 rounded-md border bg-muted" /><CardHeader><CardTitle>Card with media</CardTitle><CardDescription>Placeholder, não uma imagem decorativa.</CardDescription></CardHeader><CardFooter><Button variant="outline" size="sm">Ação</Button></CardFooter></Card>
+                <Card className="opacity-50" aria-disabled="true"><CardHeader><CardTitle>Disabled Card</CardTitle><CardDescription>Estado indisponível.</CardDescription></CardHeader></Card>
+              </div>
+            </Section>
 
-            <DsSection id="tables" title="Tables" description="Tabela compacta para dados densos, com alinhamento numérico tabular, hover e seleção de linha.">
-              <DsExample title="Compact data table"><div className="ui-data-table-wrap"><table className="ui-data-table"><thead><tr><th>Item</th><th>Estado</th><th className="numeric">Valor</th><th className="actions">Ação</th></tr></thead><tbody>
-                <tr><td>Configuração Alpha</td><td><StatusBadge tone="positive">Ativo</StatusBadge></td><td className="numeric">742.5</td><td className="actions"><Button size="icon" variant="ghost" icon="settings" ariaLabel="Configurar Alpha"/></td></tr>
-                <tr data-selected="true"><td>Configuração Bravo</td><td><StatusBadge tone="accent">Selecionado</StatusBadge></td><td className="numeric">681.0</td><td className="actions"><Button size="icon" variant="ghost" icon="settings" ariaLabel="Configurar Bravo"/></td></tr>
-                <tr><td>Configuração Charlie</td><td><StatusBadge tone="warning">Revisar</StatusBadge></td><td className="numeric">599.2</td><td className="actions"><Button size="icon" variant="ghost" icon="settings" ariaLabel="Configurar Charlie"/></td></tr>
-              </tbody></table></div></DsExample>
-              <DsExample title="Table empty state"><EmptyState title="Nenhum registro" description="A tabela mantém um estado vazio simples, sem ilustração grande."/></DsExample>
-            </DsSection>
+            <Section id="tables" title="Tables" description="Tabela compacta usando os primitives Table do shadcn. Hover e selected vêm das classes do componente.">
+              <Example title="Compact data table">
+                <div className="overflow-hidden rounded-md border">
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Arma</TableHead><TableHead>Classe</TableHead><TableHead className="text-right">Score</TableHead><TableHead className="w-12"><span className="sr-only">Ações</span></TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      <TableRow><TableCell className="font-medium">M4A1</TableCell><TableCell>Assault</TableCell><TableCell className="text-right font-data">86.4</TableCell><TableCell><Button variant="ghost" size="icon-xs" aria-label="Mais ações"><MoreHorizontal /></Button></TableCell></TableRow>
+                      <TableRow data-state="selected"><TableCell className="font-medium">KORD</TableCell><TableCell>LMG</TableCell><TableCell className="text-right font-data">81.2</TableCell><TableCell><Button variant="ghost" size="icon-xs" aria-label="Mais ações"><MoreHorizontal /></Button></TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">SVDM</TableCell><TableCell>DMR</TableCell><TableCell className="text-right font-data">78.9</TableCell><TableCell><Button variant="ghost" size="icon-xs" aria-label="Mais ações"><MoreHorizontal /></Button></TableCell></TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="tooltips" title="Tooltips" description="Tooltip abre por hover e por foco do teclado. Conteúdo permanece curto e contextual.">
-              <DsExample title="Tooltip patterns"><div className="ds-row">
-                <Tooltip label="Informação contextual curta."><span className="ds-row"><Icon name="info"/>Passe ou foque</span></Tooltip>
-                <Tooltip label="Configurações visuais deste item."><Button size="icon" variant="secondary" icon="settings" ariaLabel="Abrir configurações"/></Tooltip>
-                <Tooltip label="Texto um pouco maior para explicar uma métrica sem tirar o usuário do contexto atual."><span className="ds-token-code">Métrica contextual ⓘ</span></Tooltip>
-              </div></DsExample>
-            </DsSection>
+            <Section id="tooltips" title="Tooltips" description="Tooltip é o componente shadcn/Radix, disponível por hover e foco de teclado.">
+              <Example title="Tooltip examples"><div className="flex flex-wrap gap-3"><Tooltip><TooltipTrigger asChild><Button variant="outline">Passe o mouse</Button></TooltipTrigger><TooltipContent>Tooltip simples</TooltipContent></Tooltip><Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label="Ajuda"><CircleHelp /></Button></TooltipTrigger><TooltipContent>Explicação um pouco maior sobre este controle.</TooltipContent></Tooltip></div></Example>
+            </Section>
 
-            <DsSection id="overlays" title="Overlays" description="Estado real da V1: Popover, Dropdown, Dialog, Sheet e Drawer ainda não são primitives do projeto.">
-              <Feedback tone="info" title="Nenhum overlay estrutural na V1">O showcase não simula componentes que ainda não existem. Tooltip é o único overlay contextual formalizado neste estágio.</Feedback>
-            </DsSection>
+            <Section id="overlays" title="Overlays" description="Dialog, Sheet, Popover e Dropdown Menu já existem no shadcn e são mostrados sem versões customizadas concorrentes.">
+              <Example title="Interactive overlays">
+                <div className="flex flex-wrap gap-2">
+                  <Dialog><DialogTrigger asChild><Button variant="outline">Dialog</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Dialog de exemplo</DialogTitle><DialogDescription>Conteúdo fictício para avaliar espaçamento, foco e overlay.</DialogDescription></DialogHeader><DialogFooter><Button>Confirmar</Button></DialogFooter></DialogContent></Dialog>
+                  <Sheet><SheetTrigger asChild><Button variant="outline"><Menu />Sheet</Button></SheetTrigger><SheetContent><SheetHeader><SheetTitle>Painel lateral</SheetTitle><SheetDescription>Exemplo do Sheet oficial do shadcn.</SheetDescription></SheetHeader></SheetContent></Sheet>
+                  <Popover><PopoverTrigger asChild><Button variant="outline">Popover</Button></PopoverTrigger><PopoverContent className="w-72"><p className="text-sm font-medium">Popover</p><p className="mt-1 text-xs text-muted-foreground">Informação contextual curta.</p></PopoverContent></Popover>
+                  <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline">Dropdown <ChevronDown /></Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuLabel>Ações</DropdownMenuLabel><DropdownMenuSeparator /><DropdownMenuItem><Copy />Copiar</DropdownMenuItem><DropdownMenuItem><Settings />Configurar</DropdownMenuItem><DropdownMenuItem variant="destructive"><Trash2 />Excluir</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="progress" title="Progress & Indicators" description="Indicador linear compacto para progresso determinado. O valor textual permanece visível e não depende apenas de cor.">
-              <DsExample title="Progress values"><div className="ds-stack"><ProgressBar value={25} label="Inicial"/><ProgressBar value={58} label="Intermediário"/><ProgressBar value={88} label="Avançado"/></div></DsExample>
-            </DsSection>
+            <Section id="feedback" title="Feedback" description="Alert é o primitive único. Variações semânticas usam os tokens existentes, não um segundo padrão de banner.">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Alert><Info /><AlertTitle>Informação</AlertTitle><AlertDescription>Mensagem contextual neutra.</AlertDescription></Alert>
+                <Alert style={{ borderColor: "var(--bf-positive)" }}><Check style={{ color: "var(--bf-positive)" }} /><AlertTitle>Sucesso</AlertTitle><AlertDescription>A operação fictícia foi concluída.</AlertDescription></Alert>
+                <Alert style={{ borderColor: "var(--bf-warning)" }}><ShieldAlert style={{ color: "var(--bf-warning)" }} /><AlertTitle>Atenção</AlertTitle><AlertDescription>Revise esta configuração.</AlertDescription></Alert>
+                <Alert variant="destructive"><AlertCircle /><AlertTitle>Erro</AlertTitle><AlertDescription>Não foi possível concluir a ação.</AlertDescription></Alert>
+              </div>
+            </Section>
 
-            <DsSection id="loading" title="Loading" description="Skeleton preserva aproximadamente o layout final e usa pulsação simples, sem shimmer ou gradiente decorativo.">
-              <DsExample title="Skeleton patterns"><div className="ds-grid">
-                <div className="ds-skeleton-card"><Skeleton height="72px"/><Skeleton width="42%"/><Skeleton width="78%"/><Skeleton width="64%"/></div>
-                <div className="ds-skeleton-card"><Skeleton width="30%" height="10px"/><Skeleton height="40px"/><Skeleton width="58%" height="10px"/></div>
-                <div className="ds-skeleton-table"><div><Skeleton/><Skeleton/><Skeleton/></div><div><Skeleton/><Skeleton/><Skeleton/></div><div><Skeleton/><Skeleton/><Skeleton/></div></div>
-              </div></DsExample>
-            </DsSection>
+            <Section id="loading" title="Loading" description="Skeleton é o padrão principal para preservar aproximadamente o layout final durante carregamento.">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card><CardHeader><Skeleton className="h-5 w-40" /><Skeleton className="h-4 w-64 max-w-full" /></CardHeader><CardContent className="space-y-3"><Skeleton className="h-24 w-full" /><Skeleton className="h-9 w-28" /></CardContent></Card>
+                <div className="overflow-hidden rounded-lg border"><div className="flex gap-4 border-b p-4"><Skeleton className="h-4 flex-1" /><Skeleton className="h-4 w-20" /></div><div className="flex gap-4 border-b p-4"><Skeleton className="h-4 flex-1" /><Skeleton className="h-4 w-20" /></div><div className="flex gap-4 p-4"><Skeleton className="h-4 flex-1" /><Skeleton className="h-4 w-20" /></div></div>
+              </div>
+            </Section>
 
-            <DsSection id="empty" title="Empty States" description="Estado vazio prioriza explicação curta e uma ação opcional. Sem ilustração grande ou componente de marketing.">
-              <DsExample title="Empty state"><EmptyState title="Nenhum item selecionado" description="Escolha um item para visualizar os detalhes deste painel." action={<Button variant="secondary" size="sm">Selecionar item</Button>}/></DsExample>
-            </DsSection>
+            <Section id="empty" title="Empty States" description="Estado vazio simples composto apenas com Card, Button e Lucide; não há ilustração ou componente paralelo desnecessário.">
+              <Card className="max-w-lg items-center text-center"><CardHeader><div className="mx-auto mb-2 grid size-10 place-items-center rounded-lg border bg-muted"><Search className="size-4" /></div><CardTitle>Nenhum resultado</CardTitle><CardDescription>Ajuste os filtros ou limpe a busca para continuar.</CardDescription></CardHeader><CardFooter><Button variant="outline" size="sm">Limpar filtros</Button></CardFooter></Card>
+            </Section>
 
-            <DsSection id="feedback" title="Error & Feedback" description="Uma única estrutura de feedback com variação semântica por tom e borda lateral.">
-              <div className="ds-grid two"><Feedback tone="info" title="Informação">Contexto adicional sem bloquear a tarefa.</Feedback><Feedback tone="positive" title="Sucesso">A alteração fictícia foi aplicada.</Feedback><Feedback tone="warning" title="Atenção">Revise este valor antes de continuar.</Feedback><Feedback tone="negative" title="Erro">Não foi possível concluir a ação fictícia.</Feedback></div>
-            </DsSection>
+            <Section id="states" title="States" description="Comparação rápida entre estados reais. Hover/focus/active devem ser testados diretamente com mouse e Tab; selected é representado pela mesma semântica usada no produto.">
+              <Example title="State matrix">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-2"><span className="text-xs text-muted-foreground">Default / Hover / Focus / Active</span><Button variant="outline">Interaja</Button></div>
+                  <div className="grid gap-2"><span className="text-xs text-muted-foreground">Selected</span><Button>Selecionado</Button></div>
+                  <div className="grid gap-2"><span className="text-xs text-muted-foreground">Disabled</span><Button disabled>Desabilitado</Button></div>
+                  <div className="grid gap-2"><span className="text-xs text-muted-foreground">Input</span><Input placeholder="Clique ou use Tab" /></div>
+                  <div className="grid gap-2"><span className="text-xs text-muted-foreground">Card selected</span><Card className="border-primary py-4"><CardContent className="px-4 text-sm">Selected surface</CardContent></Card></div>
+                </div>
+              </Example>
+            </Section>
 
-            <DsSection id="states" title="States" description="Comparação prática dos estados. Hover, focus e active devem ser acionados diretamente; selected e disabled são propriedades persistentes.">
-              <DsExample title="Button state consistency"><div className="ds-state-grid">
-                <div className="ds-state-cell"><span>Default</span><Button variant="secondary" size="sm">Default</Button></div>
-                <div className="ds-state-cell"><span>Hover</span><Button variant="secondary" size="sm">Passe o mouse</Button></div>
-                <div className="ds-state-cell"><span>Focus</span><Button variant="secondary" size="sm">Use Tab</Button></div>
-                <div className="ds-state-cell"><span>Active</span><Button variant="secondary" size="sm">Pressione</Button></div>
-                <div className="ds-state-cell"><span>Selected</span><StatusBadge tone="accent">Selected</StatusBadge></div>
-                <div className="ds-state-cell"><span>Disabled</span><Button disabled size="sm">Disabled</Button></div>
-              </div></DsExample>
-              <DsExample title="Cross-component states"><div className="ds-grid"><Card interactive title="Card hover/focus" body="Interaja diretamente com o card."/><Card interactive selected title="Card selected" body="Seleção persistente."/><TextField label="Input error" defaultValue="Inválido" error="Mensagem de erro consistente."/></div></DsExample>
-            </DsSection>
+            <Section id="composition" title="Composition" description="Pequenas composições para verificar como componentes oficiais funcionam juntos sem representar funcionalidades reais do produto.">
+              <Example title="Toolbar">
+                <div className="flex flex-col gap-2 md:flex-row">
+                  <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" placeholder="Buscar" /></div>
+                  <Select defaultValue="all"><SelectTrigger className="w-full md:w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas as classes</SelectItem><SelectItem value="assault">Assault</SelectItem></SelectContent></Select>
+                  <Button><Plus />Adicionar</Button>
+                </div>
+              </Example>
 
-            <DsSection id="composition" title="Composition" description="Pequenas composições fictícias para avaliar como os componentes reais convivem, sem representar funcionalidades do produto.">
-              <DsExample title="Toolbar"><div className="ds-composition-toolbar"><SearchField value={filledSearch} onChange={setFilledSearch} label="Buscar"/><SelectField label="Categoria" options={SELECT_OPTIONS}/><Button icon="plus">Adicionar</Button></div></DsExample>
-              <DsExample title="Content card"><div className="ds-grid two"><Card title="Configuração de exemplo" body="Uma composição pequena com thumbnail, status e ação." media={<div className="ds-thumb">Thumbnail</div>} badge={<StatusBadge tone="positive">Disponível</StatusBadge>} footer={<><span className="ds-number">62<small> / 100</small></span><Button variant="secondary" size="sm" icon="arrow-right">Detalhes</Button></>}/></div></DsExample>
-              <DsExample title="Data panel"><div className="ds-composition-panel"><div className="ds-kpi"><span>Índice fictício</span><div className="ds-number">742.5</div></div><div className="ds-stack"><ProgressBar value={74} label="Eficiência visual"/><div className="ui-data-table-wrap"><table className="ui-data-table"><thead><tr><th>Métrica</th><th className="numeric">Valor</th></tr></thead><tbody><tr><td>Resposta</td><td className="numeric">218 ms</td></tr><tr><td>Cadência</td><td className="numeric">720 rpm</td></tr></tbody></table></div></div></div></DsExample>
-            </DsSection>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card><CardHeader><div><CardTitle>Content card</CardTitle><CardDescription>Composição de thumbnail, badge, dados e ação.</CardDescription></div><CardAction><Badge>Meta</Badge></CardAction></CardHeader><CardContent><div className="mb-4 h-28 rounded-md border bg-muted" /><div className="grid grid-cols-2 gap-3 text-sm"><div><p className="text-xs text-muted-foreground">Score</p><p className="font-data text-xl font-semibold">86.4</p></div><div><p className="text-xs text-muted-foreground">Custo</p><p className="font-data text-xl font-semibold">60</p></div></div></CardContent><CardFooter><Button variant="outline" size="sm">Ver detalhes <ArrowRight /></Button></CardFooter></Card>
+                <Card><CardHeader><CardTitle>Data panel</CardTitle><CardDescription>Heading, valor, progresso e tabela.</CardDescription></CardHeader><CardContent className="space-y-5"><div><div className="flex justify-between"><span className="text-sm">Precisão</span><span className="font-data text-sm">72%</span></div><Progress value={72} className="mt-2" /></div><div className="overflow-hidden rounded-md border"><Table><TableBody><TableRow><TableCell>TTK</TableCell><TableCell className="text-right font-data">250 ms</TableCell></TableRow><TableRow><TableCell>RPM</TableCell><TableCell className="text-right font-data">720</TableCell></TableRow></TableBody></Table></div></CardContent></Card>
+              </div>
+            </Section>
           </div>
         </main>
       </div>
     </div>
-  );
+  )
 }
