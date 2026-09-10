@@ -150,7 +150,7 @@ function Feedback(props: { tone: "info" | "positive" | "warning" | "negative"; t
 }
 
 function Skeleton(props: { width?: string; height?: string; radius?: string }) {
-  return <span className="ui-skeleton" aria-hidden="true" style={{ width: props.width ?? "100%", height: props.height ?? "12px", borderRadius: props.radius }}/ >;
+  return <span className="ui-skeleton" aria-hidden="true" style={{ width: props.width ?? "100%", height: props.height ?? "12px", borderRadius: props.radius }} />;
 }
 
 function EmptyState(props: { title: string; description: string; action?: any }) {
