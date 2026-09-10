@@ -17,8 +17,6 @@ export interface HttpServerOptions {
   serveUi?: boolean;
 }
 
-
-
 function sendText(
   response: ServerResponse,
   status: number,
@@ -41,14 +39,17 @@ function tryServeUi(path: string, response: ServerResponse): boolean {
   const root = projectRoot();
   const staticFiles: Record<string, { file: string; type: string; cache?: string }> = {
     "/": { file: resolve(root, "frontend/index.html"), type: "text/html" },
+    "/design-system": { file: resolve(root, "frontend/design-system.html"), type: "text/html" },
     "/assets/app.js": { file: resolve(root, "dist/frontend/app.js"), type: "application/javascript", cache: "public, max-age=60" },
+    "/assets/design-system.js": { file: resolve(root, "dist/frontend/design-system.js"), type: "application/javascript", cache: "public, max-age=60" },
     "/assets/styles.css": { file: resolve(root, "frontend/styles.css"), type: "text/css", cache: "public, max-age=60" },
+    "/assets/system.css": { file: resolve(root, "frontend/system.css"), type: "text/css", cache: "public, max-age=60" },
   };
   const asset = staticFiles[path];
   if (!asset) return false;
   try {
     const body = readFileSync(asset.file, "utf8");
-    if (path === "/") {
+    if (path === "/" || path === "/design-system") {
       response.setHeader("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
       response.setHeader("referrer-policy", "same-origin");
     }
@@ -159,6 +160,7 @@ async function routeRequest(
         demoRequest: "GET /v1/demo-request",
         health: "GET /health",
         ui: "GET /",
+        designSystem: "GET /design-system",
       },
     }));
     return;
