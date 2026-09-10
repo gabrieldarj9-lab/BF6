@@ -12,6 +12,7 @@
   "files": [
     "react-globals.d.ts",
     "src/components/ui/primitives.tsx",
-    "src/design-system.tsx"
+    "src/design-system.tsx",
+    "src/design-system-entry.tsx"
   ]
 }
