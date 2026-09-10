@@ -7,6 +7,10 @@ function cn(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(" ");
 }
 
+function uiId(prefix: string, reactId: string): string {
+  return `${prefix}-${reactId.replace(/:/g, "")}`;
+}
+
 type IconName = "search" | "close" | "chevron-down" | "check" | "info" | "warning" | "plus" | "settings" | "arrow-right" | "refresh";
 
 function Icon(props: { name: IconName; size?: number; label?: string }) {
@@ -65,7 +69,8 @@ function Button(props: { children?: any; variant?: ButtonVariant; size?: "sm" | 
 }
 
 function TextField(props: { label: string; placeholder?: string; helper?: string; error?: string; disabled?: boolean; defaultValue?: string; icon?: IconName; type?: string }) {
-  const id = `field-${String(props.label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const reactId = React.useId();
+  const id = uiId("field", reactId);
   const describedBy = props.error ? `${id}-error` : props.helper ? `${id}-helper` : undefined;
   return (
     <div className="ui-field" data-error={props.error ? "true" : "false"}>
@@ -80,7 +85,7 @@ function TextField(props: { label: string; placeholder?: string; helper?: string
 }
 
 function SearchField(props: { value: string; onChange: (value: string) => void; placeholder?: string; label?: string }) {
-  const id = "ds-search-field";
+  const id = uiId("search", React.useId());
   return (
     <div className="ui-field ui-search-field">
       <label htmlFor={id}>{props.label ?? "Buscar"}</label>
@@ -94,31 +99,37 @@ function SearchField(props: { value: string; onChange: (value: string) => void; 
 }
 
 function SelectField(props: { label: string; options: Array<{ value: string; label: string }>; defaultValue?: string; disabled?: boolean; helper?: string }) {
-  const id = `select-${String(props.label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const id = uiId("select", React.useId());
+  const helperId = props.helper ? `${id}-helper` : undefined;
   return (
     <div className="ui-field">
       <label htmlFor={id}>{props.label}</label>
       <div className="ui-select-wrap">
-        <select id={id} defaultValue={props.defaultValue} disabled={props.disabled}>
+        <select id={id} defaultValue={props.defaultValue} disabled={props.disabled} aria-describedby={helperId}>
           {props.options.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
         </select>
         <span className="ui-select-icon"><Icon name="chevron-down" size={14}/></span>
       </div>
-      {props.helper ? <div className="ui-field-message">{props.helper}</div> : null}
+      {props.helper ? <div className="ui-field-message" id={helperId}>{props.helper}</div> : null}
     </div>
   );
 }
 
 function Tabs(props: { items: Array<{ id: string; label: string; disabled?: boolean; content: any }>; defaultId?: string }) {
+  const prefix = uiId("tabs", React.useId());
   const initial = props.defaultId ?? props.items.find((item) => !item.disabled)?.id ?? props.items[0]?.id ?? "";
   const [active, setActive] = React.useState(initial);
   const activeItem = props.items.find((item) => item.id === active) ?? props.items[0];
   return (
     <div className="ui-tabs">
       <div className="ui-tablist" role="tablist" aria-label="Exemplo de abas">
-        {props.items.map((item) => <button key={item.id} type="button" role="tab" aria-selected={active === item.id} aria-controls={`panel-${item.id}`} disabled={item.disabled} onClick={() => setActive(item.id)}>{item.label}</button>)}
+        {props.items.map((item) => {
+          const tabId = `${prefix}-tab-${item.id}`;
+          const panelId = `${prefix}-panel-${item.id}`;
+          return <button id={tabId} key={item.id} type="button" role="tab" aria-selected={active === item.id} aria-controls={panelId} disabled={item.disabled} onClick={() => setActive(item.id)}>{item.label}</button>;
+        })}
       </div>
-      {activeItem ? <div className="ui-tabpanel" role="tabpanel" id={`panel-${activeItem.id}`}>{activeItem.content}</div> : null}
+      {activeItem ? <div className="ui-tabpanel" role="tabpanel" id={`${prefix}-panel-${activeItem.id}`} aria-labelledby={`${prefix}-tab-${activeItem.id}`}>{activeItem.content}</div> : null}
     </div>
   );
 }
@@ -136,12 +147,13 @@ function Card(props: { title: string; body?: string; badge?: any; selected?: boo
 }
 
 function Tooltip(props: { label: string; children: any }) {
-  return <span className="ui-tooltip"><span className="ui-tooltip-trigger" tabIndex={0}>{props.children}</span><span className="ui-tooltip-content" role="tooltip">{props.label}</span></span>;
+  const id = uiId("tooltip", React.useId());
+  return <span className="ui-tooltip"><span className="ui-tooltip-trigger" tabIndex={0} aria-describedby={id}>{props.children}</span><span className="ui-tooltip-content" id={id} role="tooltip">{props.label}</span></span>;
 }
 
 function ProgressBar(props: { value: number; label?: string }) {
   const value = Math.max(0, Math.min(100, props.value));
-  return <div className="ui-progress-block"><div className="ui-progress-meta"><span>{props.label ?? "Progresso"}</span><strong>{value}%</strong></div><div className="ui-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}><span style={{ width: `${value}%` }}/></div></div>;
+  return <div className="ui-progress-block"><div className="ui-progress-meta"><span>{props.label ?? "Progresso"}</span><strong>{value}%</strong></div><div className="ui-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-label={props.label ?? "Progresso"}><span style={{ width: `${value}%` }}/></div></div>;
 }
 
 function Feedback(props: { tone: "info" | "positive" | "warning" | "negative"; title: string; children?: any }) {
