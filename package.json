@@ -2,15 +2,18 @@
   "name": "bf6-v1-engine",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
     "typecheck": "npm run typecheck:server && npm run typecheck:ui",
     "typecheck:server": "tsc --noEmit -p tsconfig.json",
-    "typecheck:ui": "tsc --noEmit -p frontend/tsconfig.json && tsc --noEmit -p frontend/tsconfig.design-system.json",
+    "typecheck:ui": "npm run typecheck --workspace frontend",
     "build": "npm run build:server && npm run build:ui",
     "build:server": "tsc -p tsconfig.json",
-    "build:ui": "tsc -p frontend/tsconfig.json && tsc -p frontend/tsconfig.design-system.json",
+    "build:ui": "npm run build --workspace frontend",
     "test": "npm run build && node dist/tests/integration.test.js && node dist/tests/http.integration.test.js && node dist/tests/ui.integration.test.js",
     "test:http": "npm run build && node dist/tests/http.integration.test.js",
     "test:ui": "npm run build && node dist/tests/ui.integration.test.js",
@@ -20,6 +23,6 @@
     "verify": "npm run typecheck && npm run test && npm run demo"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
