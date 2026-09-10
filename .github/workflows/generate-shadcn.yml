@@ -1,0 +1,49 @@
+name: Generate real shadcn/ui components
+
+on:
+  push:
+    branches:
+      - feat/real-shadcn
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install workspace dependencies
+        run: npm install
+
+      - name: Generate shadcn/ui source from official registry
+        run: >-
+          npx shadcn@latest add
+          button input label select tabs badge card table tooltip progress skeleton alert separator
+          dialog sheet dropdown-menu popover slider
+          --cwd frontend --yes --overwrite
+
+      - name: Normalize lockfile
+        run: npm install
+
+      - name: Commit generated source
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json frontend/package.json frontend/src/components/ui frontend/src/lib/utils.ts
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+            exit 0
+          fi
+          git commit -m "feat(ui): install official shadcn components"
+          git push origin HEAD:feat/real-shadcn
