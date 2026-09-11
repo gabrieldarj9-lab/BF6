@@ -1,7 +1,6 @@
 import { inspectWeaponEngineReadiness } from "./engine-materialization";
+import { SOURCE_BACKED_WEAPONS } from "./source-backed-weapons";
 import type { WeaponAttachmentRecord, WeaponAttachmentSlotId, WeaponDataRecord } from "./types";
-import { svdmWeaponRecord } from "./weapons/svdm";
-import { svk86WeaponRecord } from "./weapons/svk-86";
 
 export interface PublicCatalogAttachment {
   id: string;
@@ -123,11 +122,6 @@ function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
     })),
   };
 }
-
-export const SOURCE_BACKED_WEAPONS: readonly WeaponDataRecord[] = [
-  svk86WeaponRecord,
-  svdmWeaponRecord,
-];
 
 export function getPublicWeaponCatalog(): PublicWeaponCatalog {
   return {
