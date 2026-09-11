@@ -38,17 +38,6 @@ import {
 type ApiEnvelope<T> = { data: T }
 type ApiErrorEnvelope = { error?: { code?: string; message?: string } }
 
-const NAV_ITEMS = [
-  ["Fuzis de assalto", "01"],
-  ["Carabinas", "—"],
-  ["SMGs", "—"],
-  ["LMGs", "—"],
-  ["DMRs", "—"],
-  ["Snipers", "—"],
-  ["Escopetas", "—"],
-  ["Secundárias", "—"],
-] as const
-
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init)
   const body = (await response.json()) as ApiEnvelope<T> & ApiErrorEnvelope
@@ -103,6 +92,17 @@ function Topbar({ apiState }: { apiState: "connecting" | "online" | "error" }) {
     </header>
   )
 }
+
+const NAV_ITEMS = [
+  ["Fuzis de assalto", "01"],
+  ["Carabinas", "—"],
+  ["SMGs", "—"],
+  ["LMGs", "—"],
+  ["DMRs", "—"],
+  ["Snipers", "—"],
+  ["Escopetas", "—"],
+  ["Secundárias", "—"],
+] as const
 
 function Sidebar() {
   return (
@@ -251,13 +251,13 @@ export function App() {
             ) : null}
 
             {!request || !progression ? (
-              <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,.8fr)]">
+              <div className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,.8fr)]">
                 <Skeleton className="h-[420px] w-full rounded-xl" />
                 <Skeleton className="h-[420px] w-full rounded-xl" />
               </div>
             ) : (
               <>
-                <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,.8fr)]">
+                <div className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,.8fr)]">
                   <BuildSummary weapon={request.weapon} step={activeStep} />
                   <MetricsPanel metrics={metrics} loading={metricsLoading} />
                 </div>
