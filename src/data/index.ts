@@ -5,5 +5,6 @@ export * from "./source-backed-weapons";
 export * from "./migration/weapon-manifest";
 export * from "./migration/validate-catalog";
 export * from "./migration/catalog-report";
+export * from "./migration/batch-builder";
 export * from "./weapons/svdm";
 export * from "./weapons/svk-86";
