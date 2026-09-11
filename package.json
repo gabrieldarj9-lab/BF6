@@ -14,13 +14,14 @@
     "build": "npm run build:server && npm run build:ui",
     "build:server": "tsc -p tsconfig.json",
     "build:ui": "npm run build --workspace frontend",
+    "catalog:report": "npm run build:server && node dist/cli/catalog-report.js",
     "test": "npm run build && node dist/tests/integration.test.js && node dist/tests/http.integration.test.js && node dist/tests/catalog.http.integration.test.js && node dist/tests/ui.integration.test.js",
     "test:http": "npm run build && node dist/tests/http.integration.test.js && node dist/tests/catalog.http.integration.test.js",
     "test:ui": "npm run build && node dist/tests/ui.integration.test.js",
     "demo": "npm run build && node dist/cli/demo.js",
     "start": "npm run build && node dist/cli/server.js",
     "serve": "node dist/cli/server.js",
-    "verify": "npm run typecheck && npm run test && npm run demo"
+    "verify": "npm run typecheck && npm run test && npm run catalog:report && npm run demo"
   },
   "devDependencies": {
     "typescript": "^5.9.2"
