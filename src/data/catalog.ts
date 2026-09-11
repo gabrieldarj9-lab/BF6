@@ -50,6 +50,17 @@ const SLOT_LABELS: Record<WeaponAttachmentSlotId, string> = {
   "right-accessory": "Acessório direito",
 };
 
+const CLASS_PRESENTATION: Record<string, { label: string; shortLabel: string }> = {
+  "assault-rifles": { label: "Fuzis de assalto", shortLabel: "Fuzis" },
+  carbines: { label: "Carabinas", shortLabel: "Carabinas" },
+  dmrs: { label: "DMRs", shortLabel: "DMRs" },
+  smgs: { label: "SMGs", shortLabel: "SMGs" },
+  lmgs: { label: "LMGs", shortLabel: "LMGs" },
+  snipers: { label: "Snipers", shortLabel: "Snipers" },
+  shotguns: { label: "Escopetas", shortLabel: "Escopetas" },
+  secondaries: { label: "Secundárias", shortLabel: "Secundárias" },
+};
+
 function classIdFor(weapon: WeaponDataRecord): string {
   switch (weapon.categoryId) {
     case "dmr": return "dmrs";
@@ -63,20 +74,43 @@ function classIdFor(weapon: WeaponDataRecord): string {
   }
 }
 
+const PRESENTATION_BY_ID: Record<string, { usageProfile: string; description: string }> = {
+  "svk-86": {
+    usageProfile: "Precisão · alto impacto",
+    description: "DMR semiautomática de alto impacto. O catálogo de acessórios, custos e desbloqueios já usa dados source-backed; os efeitos técnicos ainda estão em validação antes de alimentar o engine.",
+  },
+  svdm: {
+    usageProfile: "Precisão · longo alcance",
+    description: "DMR semiautomática orientada a tiros cadenciados em média e longa distância. A arma já usa catálogo source-backed; custos conflitantes e efeitos técnicos continuam bloqueados até reconciliação.",
+  },
+  m4a1: {
+    usageProfile: "Curta distância · alta cadência",
+    description: "Carabina automática de alta cadência para curta e média distância. Inventário, custos e desbloqueios de maestria já vêm do catálogo source-backed.",
+  },
+  "ak-205": {
+    usageProfile: "Longo alcance · controle",
+    description: "Carabina automática orientada a estabilidade e precisão sustentada. O catálogo real já substitui o mock; efeitos técnicos permanecem em validação.",
+  },
+  "qbz-192": {
+    usageProfile: "Longo alcance · versátil",
+    description: "Carabina automática equilibrada para média e longa distância. O nível de desbloqueio de carreira permanece em conflito entre fontes e não é inventado.",
+  },
+  m433: {
+    usageProfile: "Curta distância · agressivo",
+    description: "Fuzil de assalto de alta cadência para curta e média distância. Acessórios e progressão de maestria usam o registro source-backed.",
+  },
+  "nvo-228e": {
+    usageProfile: "Longo alcance · alto impacto",
+    description: "Fuzil de assalto de dano elevado para média distância. O nome e a classe foram corrigidos durante a migração source-backed.",
+  },
+  "tr-7": {
+    usageProfile: "Curta distância · alto impacto",
+    description: "Fuzil de assalto automático de alto impacto. O catálogo real já cobre o inventário principal de acessórios e seus desbloqueios de maestria.",
+  },
+};
+
 function presentationFor(weapon: WeaponDataRecord) {
-  if (weapon.id === "svk-86") {
-    return {
-      usageProfile: "Precisão · alto impacto",
-      description: "DMR semiautomática de alto impacto. O catálogo de acessórios, custos e desbloqueios já usa dados source-backed; os efeitos técnicos ainda estão em validação antes de alimentar o engine.",
-    };
-  }
-  if (weapon.id === "svdm") {
-    return {
-      usageProfile: "Precisão · longo alcance",
-      description: "DMR semiautomática orientada a tiros cadenciados em média e longa distância. A arma já usa catálogo source-backed; custos conflitantes e efeitos técnicos continuam bloqueados até reconciliação.",
-    };
-  }
-  return {
+  return PRESENTATION_BY_ID[weapon.id] ?? {
     usageProfile: "Em validação",
     description: "Dados source-backed em validação.",
   };
@@ -97,8 +131,6 @@ function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
     budgetPoints: weapon.budget,
     careerUnlockLevel: weapon.careerUnlockLevel,
     mastery: {
-      // Algumas fontes representam os itens padrão como rank 0 internamente.
-      // A superfície pública usa a jornada visível ao jogador: M1–M50.
       minRank: Math.max(1, weapon.mastery.minRank),
       maxRank: weapon.mastery.maxRank,
       milestones: [
@@ -124,10 +156,14 @@ function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
 }
 
 export function getPublicWeaponCatalog(): PublicWeaponCatalog {
+  const weapons = SOURCE_BACKED_WEAPONS.map(toPublicWeapon);
+  const classIds = [...new Set(weapons.map((weapon) => weapon.classId))];
+
   return {
-    classes: [
-      { id: "dmrs", label: "DMRs", shortLabel: "DMRs" },
-    ],
-    weapons: SOURCE_BACKED_WEAPONS.map(toPublicWeapon),
+    classes: classIds.map((id) => ({
+      id,
+      ...(CLASS_PRESENTATION[id] ?? { label: id, shortLabel: id }),
+    })),
+    weapons,
   };
 }
