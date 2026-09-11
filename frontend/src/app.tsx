@@ -13,6 +13,7 @@ import { MasterySelector } from "@/components/bf6/mastery-selector"
 import { MetricsPanel } from "@/components/bf6/metrics-panel"
 import { ProgressionTimeline } from "@/components/bf6/progression-timeline"
 import { WeaponHeader } from "@/components/bf6/weapon-header"
+import { WeaponNavigation } from "@/components/bf6/weapon-navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ import {
   type ProgressionStep,
   type Weapon,
 } from "@/features/builds/model"
+import { MOCK_WEAPON_CLASSES } from "@/features/catalog/mock-navigation"
 
 type ApiEnvelope<T> = { data: T }
 type ApiErrorEnvelope = { error?: { code?: string; message?: string } }
@@ -93,41 +95,6 @@ function Topbar({ apiState }: { apiState: "connecting" | "online" | "error" }) {
   )
 }
 
-const NAV_ITEMS = [
-  ["Fuzis de assalto", "01"],
-  ["Carabinas", "—"],
-  ["SMGs", "—"],
-  ["LMGs", "—"],
-  ["DMRs", "—"],
-  ["Snipers", "—"],
-  ["Escopetas", "—"],
-  ["Secundárias", "—"],
-] as const
-
-function Sidebar() {
-  return (
-    <aside className="border-b bg-sidebar lg:min-h-[calc(100vh-3.5rem)] lg:border-r lg:border-b-0">
-      <div className="sticky top-14 p-3 lg:p-4">
-        <p className="mb-2 hidden px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:block">Classes de arma</p>
-        <nav className="flex gap-1 overflow-x-auto lg:flex-col" aria-label="Classes de arma">
-          {NAV_ITEMS.map(([label, count], index) => (
-            <Button
-              key={label}
-              variant={index === 0 ? "secondary" : "ghost"}
-              className="h-9 shrink-0 justify-between gap-4 lg:w-full"
-              disabled={index !== 0}
-              aria-current={index === 0 ? "page" : undefined}
-            >
-              <span>{label}</span>
-              <span className="font-data text-xs text-muted-foreground">{count}</span>
-            </Button>
-          ))}
-        </nav>
-      </div>
-    </aside>
-  )
-}
-
 function ChangeCard({ step }: { step: ProgressionStep | null }) {
   const rows: Array<{ kind: "add" | "remove"; id: string }> = []
   step?.removedAttachmentIds.forEach((id) => rows.push({ kind: "remove", id }))
@@ -178,6 +145,8 @@ export function App() {
   const [metricsLoading, setMetricsLoading] = useState(false)
   const [mastery, setMastery] = useState(1)
   const [error, setError] = useState("")
+  const [selectedClassId, setSelectedClassId] = useState("assault-rifles")
+  const [selectedWeaponId, setSelectedWeaponId] = useState("m4a1")
 
   useEffect(() => {
     let active = true
@@ -205,6 +174,12 @@ export function App() {
     return available.length ? available[available.length - 1] : null
   }, [progression, mastery])
 
+  const selectedClass = useMemo(
+    () => MOCK_WEAPON_CLASSES.find((item) => item.id === selectedClassId) ?? MOCK_WEAPON_CLASSES[0],
+    [selectedClassId],
+  )
+  const selectedWeapon = selectedClass?.weapons.find((weapon) => weapon.id === selectedWeaponId) ?? selectedClass?.weapons[0]
+
   useEffect(() => {
     if (!request) return
     let active = true
@@ -224,21 +199,37 @@ export function App() {
     return () => { active = false }
   }, [request, activeStep?.candidateId])
 
+  const handleSelectClass = (classId: string) => {
+    const nextClass = MOCK_WEAPON_CLASSES.find((item) => item.id === classId)
+    if (!nextClass) return
+    setSelectedClassId(classId)
+    setSelectedWeaponId(nextClass.weapons[0]?.id ?? "")
+  }
+
   const maxMastery = progression ? Math.max(progression.progression.metaMastery, ...progression.progression.relevantMasteries) : 10
+  const selectedClassLabel = selectedClass?.label ?? "Fuzis de assalto"
+  const selectedWeaponName = selectedWeapon?.name ?? "M4A1"
+  const selectedWeaponProfile = selectedWeapon?.profile ?? "Versátil"
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">Ir para o conteúdo</a>
       <Topbar apiState={apiState} />
-      <div className="grid lg:grid-cols-[232px_minmax(0,1fr)]">
-        <Sidebar />
+      <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
+        <WeaponNavigation
+          classes={MOCK_WEAPON_CLASSES}
+          selectedClassId={selectedClassId}
+          selectedWeaponId={selectedWeaponId}
+          onSelectClass={handleSelectClass}
+          onSelectWeapon={setSelectedWeaponId}
+        />
         <main id="main-content" className="min-w-0">
           <div className="mx-auto max-w-[1512px] p-4 pb-16 sm:p-6 lg:p-8">
             <WeaponHeader
-              eyebrow="Fuzil de assalto · protótipo funcional"
-              title="Fixture Rifle"
-              tag="Curta distância"
-              description="Fixture sintética para validar a experiência de recomendação antes da entrada do catálogo real do Battlefield 6."
+              eyebrow={`${selectedClassLabel} · navegação mockada`}
+              title={selectedWeaponName}
+              tag={selectedWeaponProfile}
+              description="Seleção mockada para validar a navegação Classe → Arma. A build e as métricas abaixo continuam usando a fixture técnica do engine."
               controls={<MasterySelector value={mastery} max={maxMastery} onChange={setMastery} />}
             />
 
