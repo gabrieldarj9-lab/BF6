@@ -9,6 +9,15 @@ const assert = {
 
 import { createBf6HttpServer } from "../src/http/server";
 
+function assetFromHtml(html: string, extension: "js" | "css"): string {
+  const pattern = extension === "js"
+    ? /<script[^>]+src="([^"]+\.js)"/i
+    : /<link[^>]+href="([^"]+\.css)"/i;
+  const match = html.match(pattern);
+  if (!match?.[1]) throw new Error(`Could not find ${extension} asset in Vite HTML.`);
+  return match[1];
+}
+
 async function main() {
   const server = createBf6HttpServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -17,94 +26,77 @@ async function main() {
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
   try {
-    // 1. The executable HTTP server still exposes the existing product UI unchanged.
+    let html = "";
+    let jsAsset = "";
+    let cssAsset = "";
+
+    // 1. Production shell is the Vite build: no React/Tailwind CDN runtime remains.
     {
       const response = await fetch(`${baseUrl}/`);
-      const html = await response.text();
+      html = await response.text();
       assert.equal(response.status, 200);
       assert.ok(response.headers.get("content-type")?.includes("text/html"));
       assert.ok(html.includes('id="root"'));
-      assert.ok(html.includes('/assets/app.js'));
-      assert.ok(html.includes('/assets/styles.css'));
-      assert.ok(html.includes('/assets/system.css'));
-      assert.ok(html.includes('cdn.tailwindcss.com/3.4.17'));
-      assert.ok(html.includes('react@18.3.1'));
-      assert.ok(response.headers.get("content-security-policy")?.includes("unpkg.com"));
+      assert.ok(!html.includes("cdn.tailwindcss.com"), "Production UI must not load Tailwind from CDN.");
+      assert.ok(!html.includes("unpkg.com"), "Production UI must not load React from CDN.");
+      assert.ok(response.headers.get("content-security-policy")?.includes("script-src 'self'"));
+      assert.ok(!response.headers.get("content-security-policy")?.includes("unpkg.com"));
+      jsAsset = assetFromHtml(html, "js");
+      cssAsset = assetFromHtml(html, "css");
+      assert.ok(jsAsset.startsWith("/assets/"));
+      assert.ok(cssAsset.startsWith("/assets/"));
     }
 
-    // 2. Compiled product React/TypeScript UI is served by the same process.
+    // 2. The Vite JavaScript bundle includes both the product UI and the shadcn showcase.
     {
-      const response = await fetch(`${baseUrl}/assets/app.js`);
+      const response = await fetch(`${baseUrl}${jsAsset}`);
       const js = await response.text();
       assert.equal(response.status, 200);
       assert.ok(response.headers.get("content-type")?.includes("application/javascript"));
-      assert.ok(js.includes("generateProgression"));
-      assert.ok(js.includes("Build recomendada"));
       assert.ok(js.includes("/v1/progression"));
       assert.ok(js.includes("/v1/metrics"));
+      assert.ok(js.includes("Build recomendada agora"));
+      assert.ok(js.includes("BF6 Builds Design System"));
+      assert.ok(js.includes("shadcn/ui"));
+      assert.ok(js.includes("Radix UI"));
+      assert.ok(js.includes("Lucide"));
     }
 
-    // 3. Design-system foundation tokens and required interaction states remain present.
+    // 3. Compiled Tailwind v4 theme exposes the semantic BF6/shadcn tokens and accessibility motion rule.
     {
-      const response = await fetch(`${baseUrl}/assets/styles.css`);
+      const response = await fetch(`${baseUrl}${cssAsset}`);
       const css = await response.text();
+      const compact = css.replace(/\s+/g, "");
       assert.equal(response.status, 200);
-      assert.ok(css.includes("--background: #090c10"));
-      assert.ok(css.includes("--accent: #ff6a2a"));
-      assert.ok(css.includes(":focus-visible"));
+      assert.ok(response.headers.get("content-type")?.includes("text/css"));
+      assert.ok(compact.includes("--background:#090c10"));
+      assert.ok(compact.includes("--primary:#ff6a2a"));
+      assert.ok(compact.includes("--card:#10151b"));
+      assert.ok(compact.includes("--ring:#ff6a2a"));
       assert.ok(css.includes("prefers-reduced-motion"));
-      assert.ok(!css.includes("linear-gradient"), "V1 UI must not use gratuitous gradients.");
-      assert.ok(!css.includes("backdrop-filter"), "V1 UI must not use glass/blur effects.");
+      assert.ok(!css.includes("backdrop-filter"), "BF6 theme must not introduce glass/blur effects.");
     }
 
-    // 4. Shared component stylesheet is loaded by both product and showcase.
-    {
-      const response = await fetch(`${baseUrl}/assets/system.css`);
-      const css = await response.text();
-      assert.equal(response.status, 200);
-      assert.ok(css.includes("--font-size-display"));
-      assert.ok(css.includes(".ui-button"));
-      assert.ok(css.includes(".ui-field"));
-      assert.ok(css.includes(".ui-card"));
-      assert.ok(css.includes(".ui-tooltip"));
-      assert.ok(css.includes(".ui-skeleton"));
-      assert.ok(css.includes("prefers-reduced-motion"));
-      assert.ok(!css.includes("backdrop-filter"), "Shared UI must not introduce glass/blur effects.");
-      assert.ok(!css.includes("linear-gradient"), "Shared UI must not introduce decorative gradients.");
-    }
-
-    // 5. /design-system has its own document shell but consumes the shared CSS.
+    // 4. /design-system is a client-side route backed by the same production Vite shell.
     {
       const response = await fetch(`${baseUrl}/design-system`);
-      const html = await response.text();
+      const designHtml = await response.text();
       assert.equal(response.status, 200);
       assert.ok(response.headers.get("content-type")?.includes("text/html"));
-      assert.ok(html.includes('/assets/styles.css'));
-      assert.ok(html.includes('/assets/system.css'));
-      assert.ok(html.includes('/assets/design-system.js'));
-      assert.ok(!html.includes('/assets/app.js'));
-      assert.ok(response.headers.get("content-security-policy")?.includes("unpkg.com"));
+      assert.ok(designHtml.includes('id="root"'));
+      assert.equal(assetFromHtml(designHtml, "js"), jsAsset);
+      assert.equal(assetFromHtml(designHtml, "css"), cssAsset);
+      assert.ok(!designHtml.includes("cdn.tailwindcss.com"));
+      assert.ok(!designHtml.includes("unpkg.com"));
     }
 
-    // 6. Showcase bundle contains documentation/components and no product API calls.
+    // 5. Static asset serving is constrained to Vite's /assets tree.
     {
-      const response = await fetch(`${baseUrl}/assets/design-system.js`);
-      const js = await response.text();
-      assert.equal(response.status, 200);
-      assert.ok(response.headers.get("content-type")?.includes("application/javascript"));
-      assert.ok(js.includes("BF6 Builds Design System"));
-      assert.ok(js.includes("Colors"));
-      assert.ok(js.includes("Typography"));
-      assert.ok(js.includes("Composition"));
-      assert.ok(js.includes("function Button"));
-      assert.ok(js.includes("function TextField"));
-      assert.ok(js.includes("function Card"));
-      assert.ok(!js.includes("/v1/progression"), "Design-system showcase must not call progression API.");
-      assert.ok(!js.includes("/v1/metrics"), "Design-system showcase must not call metrics API.");
-      assert.ok(!js.includes("generateProgression"), "Design-system showcase must not include product build logic.");
+      const response = await fetch(`${baseUrl}/assets/%2e%2e/%2e%2e/package.json`);
+      assert.equal(response.status, 404);
     }
 
-    // 7. The product UI still receives a transport-safe request fixture from the server.
+    // 6. The product UI still receives a transport-safe request fixture from the server.
     let demoRequest: any;
     {
       const response = await fetch(`${baseUrl}/v1/demo-request`);
@@ -116,7 +108,7 @@ async function main() {
       assert.ok(!("evaluateStructuralMajor" in demoRequest));
     }
 
-    // 8. Same request consumed by the product browser succeeds through the real E2E endpoint.
+    // 7. Same request consumed by the product browser succeeds through the real E2E endpoint.
     {
       const response = await fetch(`${baseUrl}/v1/progression`, {
         method: "POST",
@@ -134,7 +126,7 @@ async function main() {
 }
 
 main()
-  .then(() => console.log("OK: UI integration tests passed."))
+  .then(() => console.log("OK: Vite/shadcn UI integration tests passed."))
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;
