@@ -10,6 +10,19 @@ export type WeaponAccessoryPreview = {
   name: string
 }
 
+export type WeaponMasteryTier = "Bronze" | "Prata" | "Ouro" | "Platina" | "Elite"
+
+export type WeaponMasteryMilestone = {
+  rank: number
+  tier: WeaponMasteryTier
+}
+
+export type WeaponMasteryProgression = {
+  minRank: number
+  maxRank: number
+  milestones: WeaponMasteryMilestone[]
+}
+
 export type CatalogWeaponClass = {
   id: string
   label: string
@@ -24,6 +37,7 @@ export type CatalogWeapon = {
   description: string
   thumbnail: WeaponThumbnail
   accessories: WeaponAccessoryPreview[]
+  mastery: WeaponMasteryProgression
 }
 
 export type WeaponCatalog = {
