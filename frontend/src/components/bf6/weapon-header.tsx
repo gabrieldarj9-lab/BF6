@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import { ImageIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import type {
@@ -13,27 +12,20 @@ type WeaponHeaderProps = {
   controls?: ReactNode
 }
 
+const DEFAULT_WEAPON_THUMBNAIL = "/weapons/weapon-placeholder.svg"
+
 export function WeaponHeader({ weapon, weaponClass, controls }: WeaponHeaderProps) {
+  const thumbnailSrc = weapon.thumbnail.src ?? DEFAULT_WEAPON_THUMBNAIL
+
   return (
     <section className="grid gap-6 border-b pb-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start" aria-labelledby="weapon-title">
       <div className="grid min-w-0 gap-5 md:grid-cols-[260px_minmax(0,1fr)] md:items-start">
         <div className="aspect-[16/10] overflow-hidden rounded-xl border bg-muted/30">
-          {weapon.thumbnail.src ? (
-            <img
-              src={weapon.thumbnail.src}
-              alt={weapon.thumbnail.alt}
-              className="h-full w-full object-contain p-4"
-            />
-          ) : (
-            <div className="grid h-full place-items-center p-5 text-center text-muted-foreground">
-              <div>
-                <div className="mx-auto grid size-10 place-items-center rounded-lg border bg-background/60">
-                  <ImageIcon className="size-4" aria-hidden="true" />
-                </div>
-                <p className="mt-3 text-xs">Thumbnail indisponível</p>
-              </div>
-            </div>
-          )}
+          <img
+            src={thumbnailSrc}
+            alt={weapon.thumbnail.alt}
+            className="h-full w-full object-contain p-3"
+          />
         </div>
 
         <div className="min-w-0">
