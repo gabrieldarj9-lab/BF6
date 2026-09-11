@@ -40,7 +40,12 @@ import {
   getCatalogClass,
   getCatalogWeapon,
   getWeaponsForClass,
+  type WeaponCatalog,
 } from "@/features/catalog/model"
+import {
+  loadSourceBackedCatalog,
+  mergeSourceBackedCatalog,
+} from "@/features/catalog/source-backed-catalog"
 
 type ApiEnvelope<T> = { data: T }
 type ApiErrorEnvelope = { error?: { code?: string; message?: string } }
@@ -144,6 +149,7 @@ function EngineCard({ progression, step }: { progression: ProgressionResult; ste
 
 export function App() {
   const [apiState, setApiState] = useState<"connecting" | "online" | "error">("connecting")
+  const [catalog, setCatalog] = useState<WeaponCatalog>(MOCK_WEAPON_CATALOG)
   const [request, setRequest] = useState<DemoRequest | null>(null)
   const [progression, setProgression] = useState<ProgressionResult | null>(null)
   const [metrics, setMetrics] = useState<MetricsResult | null>(null)
@@ -157,9 +163,13 @@ export function App() {
     let active = true
     void (async () => {
       try {
-        const demo = await loadDemoRequest()
+        const [sourceCatalog, demo] = await Promise.all([
+          loadSourceBackedCatalog(),
+          loadDemoRequest(),
+        ])
         const result = await generateProgression(demo)
         if (!active) return
+        setCatalog(mergeSourceBackedCatalog(MOCK_WEAPON_CATALOG, sourceCatalog))
         setRequest(demo)
         setProgression(result)
         setMastery(1)
@@ -167,7 +177,7 @@ export function App() {
       } catch (err) {
         if (!active) return
         setApiState("error")
-        setError(err instanceof Error ? err.message : "Não foi possível carregar o engine.")
+        setError(err instanceof Error ? err.message : "Não foi possível carregar a aplicação.")
       }
     })()
     return () => { active = false }
@@ -180,15 +190,17 @@ export function App() {
   }, [progression, mastery])
 
   const selectedClass = useMemo(
-    () => getCatalogClass(MOCK_WEAPON_CATALOG, selectedClassId) ?? MOCK_WEAPON_CATALOG.classes[0]!,
-    [selectedClassId],
+    () => getCatalogClass(catalog, selectedClassId) ?? catalog.classes[0]!,
+    [catalog, selectedClassId],
   )
 
   const selectedWeapon = useMemo(() => {
-    const directMatch = getCatalogWeapon(MOCK_WEAPON_CATALOG, selectedWeaponId)
+    const directMatch = getCatalogWeapon(catalog, selectedWeaponId)
     if (directMatch?.classId === selectedClass.id) return directMatch
-    return getWeaponsForClass(MOCK_WEAPON_CATALOG, selectedClass.id)[0] ?? MOCK_WEAPON_CATALOG.weapons[0]!
-  }, [selectedClass, selectedWeaponId])
+    return getWeaponsForClass(catalog, selectedClass.id)[0] ?? catalog.weapons[0]!
+  }, [catalog, selectedClass, selectedWeaponId])
+
+  const isSourceBackedSelection = selectedWeapon.dataStatus === "source-backed"
 
   useEffect(() => {
     setMastery((current) => Math.min(
@@ -198,7 +210,7 @@ export function App() {
   }, [selectedWeapon.id, selectedWeapon.mastery.minRank, selectedWeapon.mastery.maxRank])
 
   useEffect(() => {
-    if (!request) return
+    if (!request || isSourceBackedSelection) return
     let active = true
     setMetricsLoading(true)
     queryMetrics(request.weapon, activeStep?.attachmentIds ?? [])
@@ -214,12 +226,12 @@ export function App() {
       })
       .finally(() => { if (active) setMetricsLoading(false) })
     return () => { active = false }
-  }, [request, activeStep?.candidateId])
+  }, [request, activeStep?.candidateId, isSourceBackedSelection])
 
   const handleSelectClass = (classId: string) => {
-    const nextClass = getCatalogClass(MOCK_WEAPON_CATALOG, classId)
+    const nextClass = getCatalogClass(catalog, classId)
     if (!nextClass) return
-    const firstWeapon = getWeaponsForClass(MOCK_WEAPON_CATALOG, nextClass.id)[0]
+    const firstWeapon = getWeaponsForClass(catalog, nextClass.id)[0]
     setSelectedClassId(classId)
     setSelectedWeaponId(firstWeapon?.id ?? "")
   }
@@ -230,7 +242,7 @@ export function App() {
       <Topbar apiState={apiState} />
       <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
         <WeaponNavigation
-          catalog={MOCK_WEAPON_CATALOG}
+          catalog={catalog}
           selectedClassId={selectedClassId}
           selectedWeaponId={selectedWeaponId}
           onSelectClass={handleSelectClass}
@@ -259,7 +271,15 @@ export function App() {
               </Alert>
             ) : null}
 
-            {!request || !progression ? (
+            {isSourceBackedSelection ? (
+              <Alert className="mt-6">
+                <Info />
+                <AlertTitle>SVK-8.6 conectada ao catálogo real</AlertTitle>
+                <AlertDescription>
+                  Sidebar, cabeçalho, maestria e acessórios usam o registro source-backed de {selectedWeapon.id}. Build, métricas e progressão ficam ocultas até o registro estar pronto para o engine{selectedWeapon.engineDiagnostics?.length ? ` (${selectedWeapon.engineDiagnostics.length} validações pendentes).` : "."}
+                </AlertDescription>
+              </Alert>
+            ) : !request || !progression ? (
               <div className="mt-6 grid items-start gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,.8fr)]">
                 <Skeleton className="h-[420px] w-full rounded-xl" />
                 <Skeleton className="h-[420px] w-full rounded-xl" />
@@ -278,7 +298,7 @@ export function App() {
                 <Alert className="mt-4">
                   <Info />
                   <AlertTitle>Dados de demonstração</AlertTitle>
-                  <AlertDescription>O cabeçalho, a navegação e o limite de maestria usam o catálogo mockado. Build, métricas e marcos recomendados continuam usando a fixture de integração e não representam uma arma real do Battlefield 6.</AlertDescription>
+                  <AlertDescription>Esta arma ainda usa o catálogo mockado. Build, métricas e marcos recomendados continuam usando a fixture de integração até a arma ser migrada para o catálogo source-backed.</AlertDescription>
                 </Alert>
               </>
             )}
