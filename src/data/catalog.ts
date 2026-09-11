@@ -91,7 +91,9 @@ function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
     budgetPoints: weapon.budget,
     careerUnlockLevel: weapon.careerUnlockLevel,
     mastery: {
-      minRank: weapon.mastery.minRank,
+      // Algumas fontes representam os itens padrão como rank 0 internamente.
+      // A superfície pública usa a jornada visível ao jogador: M1–M50.
+      minRank: Math.max(1, weapon.mastery.minRank),
       maxRank: weapon.mastery.maxRank,
       milestones: [
         { rank: 10, tier: "Bronze" },
