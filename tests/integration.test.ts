@@ -17,6 +17,7 @@ const assert = {
 import { generateWeaponProgression } from "../src/api/generate-weapon-progression";
 import { generateCandidates } from "../src/candidate/generate-candidates";
 import { inspectWeaponEngineReadiness } from "../src/data/engine-materialization";
+import { svdmWeaponRecord } from "../src/data/weapons/svdm";
 import { svk86WeaponRecord } from "../src/data/weapons/svk-86";
 import { integrationFixtureRequest } from "../src/fixtures/integration-fixture";
 import { deriveMetric } from "../src/metrics/derive-metrics";
@@ -162,6 +163,42 @@ import { resolveBuildState } from "../src/resolver/resolve-build";
   assert.equal(readiness.ready, false);
   assert.ok(readiness.diagnostics.some((message) => message.includes("technical baseline")));
   assert.ok(readiness.diagnostics.some((message) => message.includes("conflicting source values for fire.rpm")));
+  assert.ok(readiness.diagnostics.some((message) => message.includes("unverified engine effects")));
+}
+
+// 6. SVDM usa o mesmo weaponId do mock e preserva conflitos de catálogo sem
+//    escolher silenciosamente um custo para o 620MM CLASSIC.
+{
+  assert.equal(svdmWeaponRecord.id, "svdm");
+  assert.equal(svdmWeaponRecord.name, "SVDM");
+  assert.equal(svdmWeaponRecord.categoryId, "dmr");
+  assert.equal(svdmWeaponRecord.budget, 100);
+  assert.equal(svdmWeaponRecord.careerUnlockLevel, undefined);
+  assert.equal(svdmWeaponRecord.mastery.maxRank, 50);
+
+  const improvedMagCatch = svdmWeaponRecord.attachments.find(
+    (attachment) => attachment.name === "IMPROVED MAG CATCH",
+  );
+  assert.ok(improvedMagCatch);
+  assert.equal(improvedMagCatch?.slotId, "ergonomics");
+  assert.equal(improvedMagCatch?.costPoints, 5);
+  assert.equal(improvedMagCatch?.unlock.type, "MASTERY");
+  if (improvedMagCatch?.unlock.type === "MASTERY") {
+    assert.equal(improvedMagCatch.unlock.level, 25);
+  }
+
+  const classic620 = svdmWeaponRecord.attachments.find(
+    (attachment) => attachment.name === "620MM CLASSIC",
+  );
+  assert.ok(classic620);
+  assert.equal(classic620?.costPoints, null);
+  assert.ok(classic620?.sourceIds.includes("rnkd-svdm-2026-09-10"));
+  assert.ok(classic620?.sourceIds.includes("battlefieldmeta-svdm-2026-09-10"));
+
+  const readiness = inspectWeaponEngineReadiness(svdmWeaponRecord);
+  assert.equal(readiness.ready, false);
+  assert.ok(readiness.diagnostics.some((message) => message.includes("technical baseline")));
+  assert.ok(readiness.diagnostics.some((message) => message.includes("missing point cost for attachment svdm-620mm-classic")));
   assert.ok(readiness.diagnostics.some((message) => message.includes("unverified engine effects")));
 }
 
