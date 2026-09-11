@@ -191,6 +191,13 @@ export function App() {
   }, [selectedClass, selectedWeaponId])
 
   useEffect(() => {
+    setMastery((current) => Math.min(
+      selectedWeapon.mastery.maxRank,
+      Math.max(selectedWeapon.mastery.minRank, current),
+    ))
+  }, [selectedWeapon.id, selectedWeapon.mastery.minRank, selectedWeapon.mastery.maxRank])
+
+  useEffect(() => {
     if (!request) return
     let active = true
     setMetricsLoading(true)
@@ -217,8 +224,6 @@ export function App() {
     setSelectedWeaponId(firstWeapon?.id ?? "")
   }
 
-  const maxMastery = progression ? Math.max(progression.progression.metaMastery, ...progression.progression.relevantMasteries) : 10
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground">Ir para o conteúdo</a>
@@ -236,7 +241,14 @@ export function App() {
             <WeaponHeader
               weapon={selectedWeapon}
               weaponClass={selectedClass}
-              controls={<MasterySelector value={mastery} max={maxMastery} onChange={setMastery} />}
+              controls={(
+                <MasterySelector
+                  value={mastery}
+                  min={selectedWeapon.mastery.minRank}
+                  max={selectedWeapon.mastery.maxRank}
+                  onChange={setMastery}
+                />
+              )}
             />
 
             {error ? (
@@ -266,7 +278,7 @@ export function App() {
                 <Alert className="mt-4">
                   <Info />
                   <AlertTitle>Dados de demonstração</AlertTitle>
-                  <AlertDescription>O cabeçalho e a navegação usam o catálogo mockado. Build, métricas e progressão continuam usando a fixture de integração e não representam uma arma real do Battlefield 6.</AlertDescription>
+                  <AlertDescription>O cabeçalho, a navegação e o limite de maestria usam o catálogo mockado. Build, métricas e marcos recomendados continuam usando a fixture de integração e não representam uma arma real do Battlefield 6.</AlertDescription>
                 </Alert>
               </>
             )}
