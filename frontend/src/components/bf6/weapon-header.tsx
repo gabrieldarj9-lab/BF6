@@ -53,11 +53,20 @@ function firstBySlots(inventory: CatalogAttachment[], slotIds: WeaponAttachmentS
 function SourceBackedAccessories({ weapon }: { weapon: CatalogWeapon }) {
   const inventory = weapon.attachmentInventory ?? []
   const scope = firstBySlots(inventory, ["scope"])
-  const ergonomics = firstBySlots(inventory, ["underbarrel", "ergonomics"])
-  const lasers = inventory.filter((accessory) =>
-    accessory.slotId === "top-accessory" && /MW|LASER/i.test(accessory.name),
-  ).slice(0, 2)
-  const otherAccessories = ["muzzle", "barrel", "magazine", "ammunition", "left-accessory"]
+  const ergonomics = firstBySlots(inventory, ["ergonomics"])
+
+  const railAccessories = (["top-accessory", "left-accessory", "right-accessory"] as const)
+    .map((slotId) => firstBySlots(inventory, [slotId]))
+    .filter((accessory): accessory is CatalogAttachment => Boolean(accessory))
+
+  const otherAccessories = [
+    "muzzle",
+    "barrel",
+    "underbarrel",
+    "magazine",
+    "ammunition",
+    "optic-accessory",
+  ]
     .map((slotId) => firstBySlots(inventory, [slotId as WeaponAttachmentSlotId]))
     .filter((accessory): accessory is CatalogAttachment => Boolean(accessory))
 
@@ -81,15 +90,17 @@ function SourceBackedAccessories({ weapon }: { weapon: CatalogWeapon }) {
           <p className="mb-2 font-data text-[10px] uppercase tracking-[0.12em] text-primary">Mira</p>
           {scope ? <CatalogAttachmentValue accessory={scope} /> : <p className="text-xs text-muted-foreground">Sem dado</p>}
         </div>
+
         <div className="min-w-0 rounded-lg border bg-card/40 px-3 py-2.5">
           <p className="mb-2 font-data text-[10px] uppercase tracking-[0.12em] text-primary">Ergonomia</p>
-          {ergonomics ? <CatalogAttachmentValue accessory={ergonomics} /> : <p className="text-xs text-muted-foreground">Sem dado</p>}
+          {ergonomics ? <CatalogAttachmentValue accessory={ergonomics} /> : <p className="text-xs text-muted-foreground">Nenhum acessório catalogado neste slot</p>}
         </div>
+
         <div className="min-w-0 rounded-lg border bg-card/40 px-3 py-2.5">
-          <p className="mb-2 font-data text-[10px] uppercase tracking-[0.12em] text-primary">Laser</p>
+          <p className="mb-2 font-data text-[10px] uppercase tracking-[0.12em] text-primary">Laser / trilho</p>
           <div className="divide-y">
-            {lasers.length ? lasers.map((accessory, index) => (
-              <div key={accessory.id} className={index ? "pt-2" : lasers.length > 1 ? "pb-2" : ""}>
+            {railAccessories.length ? railAccessories.map((accessory, index) => (
+              <div key={accessory.id} className={index ? "pt-2" : railAccessories.length > 1 ? "pb-2" : ""}>
                 <CatalogAttachmentValue accessory={accessory} />
               </div>
             )) : <p className="text-xs text-muted-foreground">Sem dado</p>}
