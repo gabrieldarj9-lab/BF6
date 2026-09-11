@@ -4,6 +4,7 @@ import { extname, resolve, sep } from "node:path";
 import { generateWeaponProgression } from "../api/generate-weapon-progression";
 import { queryBuildMetrics } from "../api/query-build-metrics";
 import { getPublicWeaponCatalog } from "../data/catalog";
+import { getCatalogMigrationReport } from "../data/migration/catalog-report";
 import { integrationFixtureRequest } from "../fixtures/integration-fixture";
 import type { HttpErrorBody, HttpSuccessBody } from "./types";
 import {
@@ -190,6 +191,7 @@ async function routeRequest(
       name: "BF6 V1 Engine HTTP API",
       endpoints: {
         catalog: "GET /v1/catalog",
+        catalogReport: "GET /v1/catalog/report",
         progression: "POST /v1/progression",
         metrics: "POST /v1/metrics",
         demoRequest: "GET /v1/demo-request",
@@ -203,6 +205,11 @@ async function routeRequest(
 
   if (method === "GET" && path === "/v1/catalog") {
     sendJson(response, 200, success(getPublicWeaponCatalog()));
+    return;
+  }
+
+  if (method === "GET" && path === "/v1/catalog/report") {
+    sendJson(response, 200, success(getCatalogMigrationReport()));
     return;
   }
 
