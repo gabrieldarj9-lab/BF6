@@ -20,12 +20,28 @@ export type WeaponAttachmentSlotId =
   | "ammunition"
   | "ergonomics"
   | "top-accessory"
+  | "left-accessory"
   | "right-accessory"
 
 export type WeaponAttachmentSlot = {
   id: WeaponAttachmentSlotId
   label: string
   description: string
+}
+
+export type WeaponAttachmentUnlock = {
+  type: "DEFAULT" | "MASTERY" | "SEASONAL" | "ASSIGNMENT" | "UNKNOWN"
+  level?: number
+  label: string
+}
+
+export type CatalogAttachment = {
+  id: string
+  name: string
+  slotId: WeaponAttachmentSlotId
+  slotLabel: string
+  costPoints: number | null
+  unlock: WeaponAttachmentUnlock
 }
 
 export type WeaponAttachmentLoadoutItem = {
@@ -71,6 +87,12 @@ export type CatalogWeapon = {
   thumbnail: WeaponThumbnail
   accessories: WeaponAccessoryPreview[]
   mastery: WeaponMasteryProgression
+  dataStatus?: "mock" | "source-backed"
+  budgetPoints?: number
+  careerUnlockLevel?: number
+  engineReady?: boolean
+  engineDiagnostics?: string[]
+  attachmentInventory?: CatalogAttachment[]
 }
 
 export type WeaponCatalog = {
