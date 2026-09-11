@@ -1,5 +1,6 @@
 import { inspectWeaponEngineReadiness } from "./engine-materialization";
 import type { WeaponAttachmentRecord, WeaponAttachmentSlotId, WeaponDataRecord } from "./types";
+import { svdmWeaponRecord } from "./weapons/svdm";
 import { svk86WeaponRecord } from "./weapons/svk-86";
 
 export interface PublicCatalogAttachment {
@@ -70,6 +71,12 @@ function presentationFor(weapon: WeaponDataRecord) {
       description: "DMR semiautomática de alto impacto. O catálogo de acessórios, custos e desbloqueios já usa dados source-backed; os efeitos técnicos ainda estão em validação antes de alimentar o engine.",
     };
   }
+  if (weapon.id === "svdm") {
+    return {
+      usageProfile: "Precisão · longo alcance",
+      description: "DMR semiautomática orientada a tiros cadenciados em média e longa distância. A arma já usa catálogo source-backed; custos conflitantes e efeitos técnicos continuam bloqueados até reconciliação.",
+    };
+  }
   return {
     usageProfile: "Em validação",
     description: "Dados source-backed em validação.",
@@ -117,7 +124,10 @@ function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
   };
 }
 
-export const SOURCE_BACKED_WEAPONS: readonly WeaponDataRecord[] = [svk86WeaponRecord];
+export const SOURCE_BACKED_WEAPONS: readonly WeaponDataRecord[] = [
+  svk86WeaponRecord,
+  svdmWeaponRecord,
+];
 
 export function getPublicWeaponCatalog(): PublicWeaponCatalog {
   return {
