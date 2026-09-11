@@ -22,7 +22,7 @@ function sendStatic(
   response: ServerResponse,
   status: number,
   contentType: string,
-  body: string,
+  body: string | Buffer,
   cacheControl: string,
 ) {
   response.statusCode = status;
@@ -43,7 +43,11 @@ function contentTypeFor(file: string): string {
     case ".css": return "text/css; charset=utf-8";
     case ".json": return "application/json; charset=utf-8";
     case ".svg": return "image/svg+xml; charset=utf-8";
-    default: return "text/plain; charset=utf-8";
+    case ".png": return "image/png";
+    case ".jpg":
+    case ".jpeg": return "image/jpeg";
+    case ".webp": return "image/webp";
+    default: return "application/octet-stream";
   }
 }
 
@@ -70,7 +74,9 @@ function tryServeUi(path: string, response: ServerResponse): boolean {
     }
   }
 
-  if (!path.startsWith("/assets/")) return false;
+  const isBundledAsset = path.startsWith("/assets/");
+  const isPublicWeaponAsset = path.startsWith("/weapons/");
+  if (!isBundledAsset && !isPublicWeaponAsset) return false;
 
   let decodedPath: string;
   try {
@@ -84,7 +90,7 @@ function tryServeUi(path: string, response: ServerResponse): boolean {
   if (!file.startsWith(allowedPrefix)) return false;
 
   try {
-    const body = readFileSync(file, "utf8");
+    const body = readFileSync(file);
     sendStatic(response, 200, contentTypeFor(file), body, "public, max-age=31536000, immutable");
     return true;
   } catch {
