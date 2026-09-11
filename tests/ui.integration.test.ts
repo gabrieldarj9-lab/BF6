@@ -71,10 +71,11 @@ async function main() {
       const compact = css.replace(/\s+/g, "");
       assert.equal(response.status, 200);
       assert.ok(response.headers.get("content-type")?.includes("text/css"));
-      assert.ok(compact.includes("--background:#090c10"));
+      assert.ok(compact.includes("--background:#09090b"));
       assert.ok(compact.includes("--primary:#ff6a2a"));
-      assert.ok(compact.includes("--card:#10151b"));
+      assert.ok(compact.includes("--card:#18181b"));
       assert.ok(compact.includes("--ring:#ff6a2a"));
+      assert.ok(compact.includes("--radius:.625rem") || compact.includes("--radius:0.625rem"));
       assert.ok(css.includes("prefers-reduced-motion"));
     }
 
