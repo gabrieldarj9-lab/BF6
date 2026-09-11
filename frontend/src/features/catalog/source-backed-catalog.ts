@@ -6,6 +6,7 @@ import type {
 
 type ApiCatalogWeapon = Omit<CatalogWeapon, "accessories" | "attachmentInventory" | "dataStatus"> & {
   dataStatus: "source-backed"
+  legacyMockId?: string
   accessories: CatalogAttachment[]
 }
 
@@ -16,10 +17,6 @@ type ApiCatalogResponse = {
 
 type ApiEnvelope<T> = { data: T }
 
-const LEGACY_REPLACEMENTS: Record<string, string> = {
-  "svk-86": "svk",
-}
-
 export async function loadSourceBackedCatalog(): Promise<ApiCatalogResponse> {
   const response = await fetch("/v1/catalog")
   if (!response.ok) throw new Error(`Falha ao carregar catálogo real: HTTP ${response.status}`)
@@ -28,8 +25,9 @@ export async function loadSourceBackedCatalog(): Promise<ApiCatalogResponse> {
 }
 
 function toCatalogWeapon(weapon: ApiCatalogWeapon): CatalogWeapon {
+  const { legacyMockId: _legacyMockId, ...catalogWeapon } = weapon
   return {
-    ...weapon,
+    ...catalogWeapon,
     dataStatus: "source-backed",
     attachmentInventory: weapon.accessories,
     accessories: weapon.accessories.slice(0, 6).map((accessory) => ({
@@ -47,8 +45,8 @@ export function mergeSourceBackedCatalog(
 ): WeaponCatalog {
   const sourceWeapons = sourceCatalog.weapons.map(toCatalogWeapon)
   const replacedLegacyIds = new Set(
-    sourceWeapons
-      .map((weapon) => LEGACY_REPLACEMENTS[weapon.id])
+    sourceCatalog.weapons
+      .map((weapon) => weapon.legacyMockId)
       .filter((id): id is string => Boolean(id)),
   )
   const sourceIds = new Set(sourceWeapons.map((weapon) => weapon.id))
