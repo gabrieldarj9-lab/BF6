@@ -10,6 +10,39 @@ export type WeaponAccessoryPreview = {
   name: string
 }
 
+export type WeaponAttachmentSlotId =
+  | "scope"
+  | "optic-accessory"
+  | "muzzle"
+  | "barrel"
+  | "underbarrel"
+  | "magazine"
+  | "ammunition"
+  | "ergonomics"
+  | "top-accessory"
+  | "right-accessory"
+
+export type WeaponAttachmentSlot = {
+  id: WeaponAttachmentSlotId
+  label: string
+  description: string
+}
+
+export type WeaponAttachmentLoadoutItem = {
+  id: string
+  slotId: WeaponAttachmentSlotId
+  slotLabel: string
+  name: string
+  costPoints: number
+  isMock: boolean
+}
+
+export type WeaponAttachmentLoadout = {
+  maxPoints: number
+  usedPoints: number
+  items: WeaponAttachmentLoadoutItem[]
+}
+
 export type WeaponMasteryTier = "Bronze" | "Prata" | "Ouro" | "Platina" | "Elite"
 
 export type WeaponMasteryMilestone = {
