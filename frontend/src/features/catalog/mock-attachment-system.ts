@@ -7,6 +7,8 @@ import type {
   WeaponAccessoryPreview,
 } from "@/features/catalog/model"
 
+type MockLoadoutSlotId = Exclude<WeaponAttachmentSlotId, "optic-accessory" | "left-accessory">
+
 export const WEAPON_ATTACHMENT_SLOTS: WeaponAttachmentSlot[] = [
   { id: "scope", label: "Mira", description: "Óptica principal e nível de zoom." },
   { id: "optic-accessory", label: "Acessório de mira", description: "Acessórios complementares da óptica, como miras inclinadas ou piggyback." },
@@ -17,12 +19,13 @@ export const WEAPON_ATTACHMENT_SLOTS: WeaponAttachmentSlot[] = [
   { id: "ammunition", label: "Munição", description: "Tipo de projétil, dano e penetração." },
   { id: "ergonomics", label: "Ergonomia", description: "Aprimoramentos de manejo, recarga e resposta da arma." },
   { id: "top-accessory", label: "Acessório superior", description: "Lasers e outros acessórios montados no trilho superior." },
+  { id: "left-accessory", label: "Acessório esquerdo", description: "Lanternas e acessórios laterais quando suportados pela arma." },
   { id: "right-accessory", label: "Acessório direito", description: "Lasers e lanternas montados no lado direito." },
 ]
 
 export const MOCK_MAX_ATTACHMENT_POINTS = 100
 
-const SLOT_COSTS: Record<Exclude<WeaponAttachmentSlotId, "optic-accessory">, number> = {
+const SLOT_COSTS: Record<MockLoadoutSlotId, number> = {
   scope: 10,
   muzzle: 20,
   barrel: 10,
@@ -34,7 +37,7 @@ const SLOT_COSTS: Record<Exclude<WeaponAttachmentSlotId, "optic-accessory">, num
   "right-accessory": 10,
 }
 
-const DEFAULT_NAMES: Record<Exclude<WeaponAttachmentSlotId, "optic-accessory">, string> = {
+const DEFAULT_NAMES: Record<MockLoadoutSlotId, string> = {
   scope: "RO-M 1.75X",
   muzzle: "Flash Comp",
   barrel: "Cano padrão",
@@ -46,7 +49,7 @@ const DEFAULT_NAMES: Record<Exclude<WeaponAttachmentSlotId, "optic-accessory">, 
   "right-accessory": "5 MW Red",
 }
 
-const LOADOUT_SLOT_ORDER: Array<Exclude<WeaponAttachmentSlotId, "optic-accessory">> = [
+const LOADOUT_SLOT_ORDER: MockLoadoutSlotId[] = [
   "scope",
   "muzzle",
   "barrel",
@@ -58,7 +61,7 @@ const LOADOUT_SLOT_ORDER: Array<Exclude<WeaponAttachmentSlotId, "optic-accessory
   "right-accessory",
 ]
 
-function normalizeLegacySlot(accessory: WeaponAccessoryPreview): Exclude<WeaponAttachmentSlotId, "optic-accessory"> | null {
+function normalizeLegacySlot(accessory: WeaponAccessoryPreview): MockLoadoutSlotId | null {
   switch (accessory.slotId) {
     case "optic":
     case "sight":
@@ -93,7 +96,7 @@ function slotLabel(slotId: WeaponAttachmentSlotId) {
 }
 
 export function buildMockAttachmentLoadout(weapon: CatalogWeapon): WeaponAttachmentLoadout {
-  const preferredBySlot = new Map<Exclude<WeaponAttachmentSlotId, "optic-accessory">, WeaponAccessoryPreview>()
+  const preferredBySlot = new Map<MockLoadoutSlotId, WeaponAccessoryPreview>()
 
   for (const accessory of weapon.accessories) {
     const slotId = normalizeLegacySlot(accessory)
