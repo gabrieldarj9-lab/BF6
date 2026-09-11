@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { Badge } from "@/components/ui/badge"
+import { buildMockAttachmentLoadout } from "@/features/catalog/mock-attachment-system"
 import type {
   CatalogWeapon,
   CatalogWeaponClass,
@@ -16,6 +17,7 @@ const DEFAULT_WEAPON_THUMBNAIL = "/weapons/weapon-placeholder.svg"
 
 export function WeaponHeader({ weapon, weaponClass, controls }: WeaponHeaderProps) {
   const thumbnailSrc = weapon.thumbnail.src ?? DEFAULT_WEAPON_THUMBNAIL
+  const attachmentLoadout = buildMockAttachmentLoadout(weapon)
 
   return (
     <section className="grid gap-6 border-b pb-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start" aria-labelledby="weapon-title">
@@ -38,16 +40,27 @@ export function WeaponHeader({ weapon, weaponClass, controls }: WeaponHeaderProp
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{weapon.description}</p>
 
-          {weapon.accessories.length ? (
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-label="Acessórios de referência">
-              {weapon.accessories.map((accessory) => (
-                <div key={accessory.id} className="min-w-0 rounded-lg border bg-card/40 px-3 py-2.5">
-                  <p className="font-data text-[10px] uppercase tracking-wide text-muted-foreground">{accessory.slotLabel}</p>
-                  <p className="mt-1 truncate text-sm font-medium" title={accessory.name}>{accessory.name}</p>
-                </div>
-              ))}
+          <div className="mt-5 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-sm font-medium">Acessórios mockados</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Estrutura completa para validar a personalização antes dos dados reais.</p>
             </div>
-          ) : null}
+            <Badge variant="secondary" className="font-data tabular-nums">
+              {attachmentLoadout.usedPoints}/{attachmentLoadout.maxPoints} pts
+            </Badge>
+          </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3" aria-label="Acessórios de referência">
+            {attachmentLoadout.items.map((accessory) => (
+              <div key={accessory.id} className="min-w-0 rounded-lg border bg-card/40 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-data text-[10px] uppercase tracking-wide text-muted-foreground">{accessory.slotLabel}</p>
+                  <span className="font-data text-[10px] tabular-nums text-muted-foreground">{accessory.costPoints} pts</span>
+                </div>
+                <p className="mt-1 truncate text-sm font-medium" title={accessory.name}>{accessory.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
