@@ -9,11 +9,12 @@ import { Slider } from "@/components/ui/slider"
 
 type MasterySelectorProps = {
   value: number
+  min: number
   max: number
   onChange: (value: number) => void
 }
 
-export function MasterySelector({ value, max, onChange }: MasterySelectorProps) {
+export function MasterySelector({ value, min, max, onChange }: MasterySelectorProps) {
   return (
     <Card className="gap-4 py-4 shadow-none">
       <CardHeader className="px-4">
@@ -23,14 +24,14 @@ export function MasterySelector({ value, max, onChange }: MasterySelectorProps) 
       <CardContent className="px-4">
         <Slider
           aria-label="Maestria da arma"
-          min={1}
+          min={min}
           max={max}
           step={1}
           value={[value]}
-          onValueChange={(values) => onChange(values[0] ?? 1)}
+          onValueChange={(values) => onChange(values[0] ?? min)}
         />
         <div className="mt-2 flex justify-between font-data text-[11px] text-muted-foreground">
-          <span>M1</span><span>M{max}</span>
+          <span>M{min}</span><span>M{max}</span>
         </div>
       </CardContent>
     </Card>
