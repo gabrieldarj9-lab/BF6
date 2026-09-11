@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { extname, resolve, sep } from "node:path";
 import { generateWeaponProgression } from "../api/generate-weapon-progression";
 import { queryBuildMetrics } from "../api/query-build-metrics";
+import { getPublicWeaponCatalog } from "../data/catalog";
 import { integrationFixtureRequest } from "../fixtures/integration-fixture";
 import type { HttpErrorBody, HttpSuccessBody } from "./types";
 import {
@@ -186,6 +187,7 @@ async function routeRequest(
     sendJson(response, 200, success({
       name: "BF6 V1 Engine HTTP API",
       endpoints: {
+        catalog: "GET /v1/catalog",
         progression: "POST /v1/progression",
         metrics: "POST /v1/metrics",
         demoRequest: "GET /v1/demo-request",
@@ -194,6 +196,11 @@ async function routeRequest(
         designSystem: "GET /design-system",
       },
     }));
+    return;
+  }
+
+  if (method === "GET" && path === "/v1/catalog") {
+    sendJson(response, 200, success(getPublicWeaponCatalog()));
     return;
   }
 
