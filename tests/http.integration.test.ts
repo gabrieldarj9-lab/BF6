@@ -101,7 +101,7 @@ async function main() {
       assert.equal(body.data.metrics["ttk.10m"].evidence, "DERIVED_EXACT");
     }
 
-    // 4. Source-backed catalog exposes both migrated DMRs with stable IDs.
+    // 4. Source-backed catalog exposes migrated DMR and automatic batches with stable IDs.
     {
       const response = await fetch(`${baseUrl}/v1/catalog`);
       const body = await response.json() as {
@@ -120,7 +120,7 @@ async function main() {
       };
 
       assert.equal(response.status, 200);
-      assert.equal(body.data.weapons.length, 2);
+      assert.equal(body.data.weapons.length, 8);
 
       const svk = body.data.weapons.find((weapon) => weapon.id === "svk-86");
       const svdm = body.data.weapons.find((weapon) => weapon.id === "svdm");
@@ -135,6 +135,16 @@ async function main() {
       assert.equal(svdm?.mastery.maxRank, 50);
       assert.ok(svdm?.accessories.some((item) => item.name === "IMPROVED MAG CATCH" && item.slotId === "ergonomics"));
       assert.ok(svdm?.accessories.some((item) => item.name === "620MM CLASSIC" && item.costPoints === null));
+
+      const automaticIds = ["m4a1", "ak-205", "qbz-192", "m433", "nvo-228e", "tr-7"];
+      for (const id of automaticIds) {
+        const weapon = body.data.weapons.find((item) => item.id === id);
+        assert.ok(weapon, `${id} must be exposed by the source-backed catalog`);
+        assert.equal(weapon?.budgetPoints, 100);
+        assert.equal(weapon?.mastery.minRank, 1);
+        assert.equal(weapon?.mastery.maxRank, 50);
+        assert.equal(weapon?.engineReady, false);
+      }
     }
 
     // 5. Structural input validation returns machine-readable 422 issues.
