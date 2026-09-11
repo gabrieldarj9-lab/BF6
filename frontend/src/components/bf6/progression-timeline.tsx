@@ -34,9 +34,23 @@ export function ProgressionTimeline({ steps, mastery }: ProgressionTimelineProps
             const current = reached && !steps.some((other) => other.mastery > step.mastery && other.mastery <= mastery)
             const label = step.importance === "META" ? "Meta final" : step.importance === "MAJOR" ? "Upgrade principal" : "Primeira recomendação"
             return (
-              <div key={step.mastery} className={`relative rounded-lg border p-4 ${current ? "border-primary/50 bg-primary/5" : reached ? "bg-muted/30" : "opacity-60"}`}>
+              <div
+                key={step.mastery}
+                className={`relative rounded-lg border p-4 transition-colors ${
+                  current
+                    ? "bg-accent/50 ring-1 ring-primary/20"
+                    : reached
+                      ? "bg-muted/30"
+                      : "opacity-60"
+                }`}
+              >
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <Badge variant={current ? "default" : "outline"}>M{step.mastery}</Badge>
+                  <Badge
+                    variant="outline"
+                    className={current ? "border-primary/30 bg-primary/5 text-primary" : undefined}
+                  >
+                    M{step.mastery}
+                  </Badge>
                   {reached ? <Check className="size-4 text-[var(--bf-positive)]" /> : <CircleDot className="size-4 text-muted-foreground" />}
                 </div>
                 <p className="text-sm font-semibold">{label}</p>
