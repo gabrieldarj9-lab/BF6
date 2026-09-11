@@ -180,14 +180,14 @@ export function App() {
   }, [progression, mastery])
 
   const selectedClass = useMemo(
-    () => getCatalogClass(MOCK_WEAPON_CATALOG, selectedClassId) ?? MOCK_WEAPON_CATALOG.classes[0],
+    () => getCatalogClass(MOCK_WEAPON_CATALOG, selectedClassId) ?? MOCK_WEAPON_CATALOG.classes[0]!,
     [selectedClassId],
   )
 
   const selectedWeapon = useMemo(() => {
     const directMatch = getCatalogWeapon(MOCK_WEAPON_CATALOG, selectedWeaponId)
-    if (directMatch?.classId === selectedClass?.id) return directMatch
-    return selectedClass ? getWeaponsForClass(MOCK_WEAPON_CATALOG, selectedClass.id)[0] : undefined
+    if (directMatch?.classId === selectedClass.id) return directMatch
+    return getWeaponsForClass(MOCK_WEAPON_CATALOG, selectedClass.id)[0] ?? MOCK_WEAPON_CATALOG.weapons[0]!
   }, [selectedClass, selectedWeaponId])
 
   useEffect(() => {
@@ -218,10 +218,6 @@ export function App() {
   }
 
   const maxMastery = progression ? Math.max(progression.progression.metaMastery, ...progression.progression.relevantMasteries) : 10
-  const selectedClassLabel = selectedClass?.label ?? "Fuzis de assalto"
-  const selectedWeaponName = selectedWeapon?.name ?? "M4A1"
-  const selectedWeaponProfile = selectedWeapon?.usageProfile ?? "Versátil"
-  const selectedWeaponDescription = selectedWeapon?.description ?? "Seleção mockada para validar a navegação Classe → Arma."
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -238,10 +234,8 @@ export function App() {
         <main id="main-content" className="min-w-0">
           <div className="mx-auto max-w-[1512px] p-4 pb-16 sm:p-6 lg:p-8">
             <WeaponHeader
-              eyebrow={`${selectedClassLabel} · catálogo mockado`}
-              title={selectedWeaponName}
-              tag={selectedWeaponProfile}
-              description={`${selectedWeaponDescription} Build e métricas abaixo continuam usando a fixture técnica do engine.`}
+              weapon={selectedWeapon}
+              weaponClass={selectedClass}
               controls={<MasterySelector value={mastery} max={maxMastery} onChange={setMastery} />}
             />
 
@@ -272,7 +266,7 @@ export function App() {
                 <Alert className="mt-4">
                   <Info />
                   <AlertTitle>Dados de demonstração</AlertTitle>
-                  <AlertDescription>Os números vêm da fixture de integração e não representam uma arma real do Battlefield 6.</AlertDescription>
+                  <AlertDescription>O cabeçalho e a navegação usam o catálogo mockado. Build, métricas e progressão continuam usando a fixture de integração e não representam uma arma real do Battlefield 6.</AlertDescription>
                 </Alert>
               </>
             )}
