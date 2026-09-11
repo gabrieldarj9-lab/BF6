@@ -35,7 +35,12 @@ import {
   type ProgressionStep,
   type Weapon,
 } from "@/features/builds/model"
-import { MOCK_WEAPON_CLASSES } from "@/features/catalog/mock-navigation"
+import { MOCK_WEAPON_CATALOG } from "@/features/catalog/mock-catalog"
+import {
+  getCatalogClass,
+  getCatalogWeapon,
+  getWeaponsForClass,
+} from "@/features/catalog/model"
 
 type ApiEnvelope<T> = { data: T }
 type ApiErrorEnvelope = { error?: { code?: string; message?: string } }
@@ -175,10 +180,15 @@ export function App() {
   }, [progression, mastery])
 
   const selectedClass = useMemo(
-    () => MOCK_WEAPON_CLASSES.find((item) => item.id === selectedClassId) ?? MOCK_WEAPON_CLASSES[0],
+    () => getCatalogClass(MOCK_WEAPON_CATALOG, selectedClassId) ?? MOCK_WEAPON_CATALOG.classes[0],
     [selectedClassId],
   )
-  const selectedWeapon = selectedClass?.weapons.find((weapon) => weapon.id === selectedWeaponId) ?? selectedClass?.weapons[0]
+
+  const selectedWeapon = useMemo(() => {
+    const directMatch = getCatalogWeapon(MOCK_WEAPON_CATALOG, selectedWeaponId)
+    if (directMatch?.classId === selectedClass?.id) return directMatch
+    return selectedClass ? getWeaponsForClass(MOCK_WEAPON_CATALOG, selectedClass.id)[0] : undefined
+  }, [selectedClass, selectedWeaponId])
 
   useEffect(() => {
     if (!request) return
@@ -200,16 +210,18 @@ export function App() {
   }, [request, activeStep?.candidateId])
 
   const handleSelectClass = (classId: string) => {
-    const nextClass = MOCK_WEAPON_CLASSES.find((item) => item.id === classId)
+    const nextClass = getCatalogClass(MOCK_WEAPON_CATALOG, classId)
     if (!nextClass) return
+    const firstWeapon = getWeaponsForClass(MOCK_WEAPON_CATALOG, nextClass.id)[0]
     setSelectedClassId(classId)
-    setSelectedWeaponId(nextClass.weapons[0]?.id ?? "")
+    setSelectedWeaponId(firstWeapon?.id ?? "")
   }
 
   const maxMastery = progression ? Math.max(progression.progression.metaMastery, ...progression.progression.relevantMasteries) : 10
   const selectedClassLabel = selectedClass?.label ?? "Fuzis de assalto"
   const selectedWeaponName = selectedWeapon?.name ?? "M4A1"
-  const selectedWeaponProfile = selectedWeapon?.profile ?? "Versátil"
+  const selectedWeaponProfile = selectedWeapon?.usageProfile ?? "Versátil"
+  const selectedWeaponDescription = selectedWeapon?.description ?? "Seleção mockada para validar a navegação Classe → Arma."
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -217,7 +229,7 @@ export function App() {
       <Topbar apiState={apiState} />
       <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
         <WeaponNavigation
-          classes={MOCK_WEAPON_CLASSES}
+          catalog={MOCK_WEAPON_CATALOG}
           selectedClassId={selectedClassId}
           selectedWeaponId={selectedWeaponId}
           onSelectClass={handleSelectClass}
@@ -226,10 +238,10 @@ export function App() {
         <main id="main-content" className="min-w-0">
           <div className="mx-auto max-w-[1512px] p-4 pb-16 sm:p-6 lg:p-8">
             <WeaponHeader
-              eyebrow={`${selectedClassLabel} · navegação mockada`}
+              eyebrow={`${selectedClassLabel} · catálogo mockado`}
               title={selectedWeaponName}
               tag={selectedWeaponProfile}
-              description="Seleção mockada para validar a navegação Classe → Arma. A build e as métricas abaixo continuam usando a fixture técnica do engine."
+              description={`${selectedWeaponDescription} Build e métricas abaixo continuam usando a fixture técnica do engine.`}
               controls={<MasterySelector value={mastery} max={maxMastery} onChange={setMastery} />}
             />
 
