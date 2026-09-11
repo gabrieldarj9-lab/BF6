@@ -1,4 +1,5 @@
 import { inspectWeaponEngineReadiness } from "./engine-materialization";
+import { getWeaponManifestEntry } from "./migration/weapon-manifest";
 import { SOURCE_BACKED_WEAPONS } from "./source-backed-weapons";
 import type { WeaponAttachmentRecord, WeaponAttachmentSlotId, WeaponDataRecord } from "./types";
 
@@ -15,6 +16,7 @@ export interface PublicCatalogWeapon {
   id: string;
   name: string;
   classId: string;
+  legacyMockId?: string;
   usageProfile: string;
   description: string;
   thumbnail: { src: string | null; alt: string };
@@ -119,10 +121,12 @@ function presentationFor(weapon: WeaponDataRecord) {
 function toPublicWeapon(weapon: WeaponDataRecord): PublicCatalogWeapon {
   const readiness = inspectWeaponEngineReadiness(weapon);
   const presentation = presentationFor(weapon);
+  const manifest = getWeaponManifestEntry(weapon.id);
   return {
     id: weapon.id,
     name: weapon.name,
     classId: classIdFor(weapon),
+    ...(manifest?.legacyMockId ? { legacyMockId: manifest.legacyMockId } : {}),
     ...presentation,
     thumbnail: {
       src: null,
