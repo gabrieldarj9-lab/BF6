@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { generateWeaponProgression } from "../api/generate-weapon-progression";
 import { queryBuildMetrics } from "../api/query-build-metrics";
 import { integrationFixtureRequest } from "../fixtures/integration-fixture";
@@ -31,29 +31,80 @@ function sendText(
   response.end(body);
 }
 
+function sendStatic(
+  response: ServerResponse,
+  status: number,
+  contentType: string,
+  body: Buffer,
+  cacheControl: string,
+) {
+  response.statusCode = status;
+  response.setHeader("content-type", contentType);
+  response.setHeader("cache-control", cacheControl);
+  response.setHeader("x-content-type-options", "nosniff");
+  response.end(body);
+}
+
 function projectRoot() {
   return resolve(__dirname, "../../..");
 }
 
+function contentTypeFor(file: string): string {
+  switch (extname(file).toLowerCase()) {
+    case ".html": return "text/html; charset=utf-8";
+    case ".js": return "application/javascript; charset=utf-8";
+    case ".css": return "text/css; charset=utf-8";
+    case ".json": return "application/json; charset=utf-8";
+    case ".svg": return "image/svg+xml";
+    case ".png": return "image/png";
+    case ".jpg":
+    case ".jpeg": return "image/jpeg";
+    case ".webp": return "image/webp";
+    case ".woff2": return "font/woff2";
+    case ".woff": return "font/woff";
+    default: return "application/octet-stream";
+  }
+}
+
+function setUiSecurityHeaders(response: ServerResponse) {
+  response.setHeader(
+    "content-security-policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+  );
+  response.setHeader("referrer-policy", "same-origin");
+}
+
 function tryServeUi(path: string, response: ServerResponse): boolean {
-  const root = projectRoot();
-  const staticFiles: Record<string, { file: string; type: string; cache?: string }> = {
-    "/": { file: resolve(root, "frontend/index.html"), type: "text/html" },
-    "/design-system": { file: resolve(root, "frontend/design-system.html"), type: "text/html" },
-    "/assets/app.js": { file: resolve(root, "dist/frontend/app.js"), type: "application/javascript", cache: "public, max-age=60" },
-    "/assets/design-system.js": { file: resolve(root, "dist/frontend/design-system.js"), type: "application/javascript", cache: "public, max-age=60" },
-    "/assets/styles.css": { file: resolve(root, "frontend/styles.css"), type: "text/css", cache: "public, max-age=60" },
-    "/assets/system.css": { file: resolve(root, "frontend/system.css"), type: "text/css", cache: "public, max-age=60" },
-  };
-  const asset = staticFiles[path];
-  if (!asset) return false;
-  try {
-    const body = readFileSync(asset.file, "utf8");
-    if (path === "/" || path === "/design-system") {
-      response.setHeader("content-security-policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
-      response.setHeader("referrer-policy", "same-origin");
+  const uiRoot = resolve(projectRoot(), "dist/frontend");
+
+  if (path === "/" || path === "/design-system") {
+    try {
+      const file = resolve(uiRoot, "index.html");
+      const body = readFileSync(file);
+      setUiSecurityHeaders(response);
+      sendStatic(response, 200, contentTypeFor(file), body, "no-store");
+      return true;
+    } catch {
+      return false;
     }
-    sendText(response, 200, asset.type, body, asset.cache ?? "no-store");
+  }
+
+  if (!path.startsWith("/assets/")) return false;
+
+  let decodedPath: string;
+  try {
+    decodedPath = decodeURIComponent(path);
+  } catch {
+    return false;
+  }
+
+  const file = resolve(uiRoot, `.${decodedPath}`);
+  const allowedPrefix = `${uiRoot}${sep}`;
+  if (!file.startsWith(allowedPrefix)) return false;
+
+  try {
+    const body = readFileSync(file);
+    sendStatic(response, 200, contentTypeFor(file), body, "public, max-age=31536000, immutable");
     return true;
   } catch {
     return false;
@@ -97,7 +148,7 @@ function contentTypeIsJson(request: IncomingMessage): boolean {
 }
 
 function readJsonBody(request: IncomingMessage, maxBodyBytes: number): Promise<unknown> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolveBody, reject) => {
     let body = "";
     let bytes = 0;
     let settled = false;
@@ -123,11 +174,11 @@ function readJsonBody(request: IncomingMessage, maxBodyBytes: number): Promise<u
       if (settled) return;
       settled = true;
       if (!body.trim()) {
-        resolve({});
+        resolveBody({});
         return;
       }
       try {
-        resolve(JSON.parse(body));
+        resolveBody(JSON.parse(body));
       } catch {
         reject(new HttpInputError(400, "INVALID_JSON", "Request body is not valid JSON."));
       }
@@ -167,7 +218,6 @@ async function routeRequest(
   }
 
   if (method === "GET" && path === "/v1/demo-request") {
-    // Callback-based configuration is intentionally in-process only and is never exposed as partial JSON.
     const {
       candidateDominance: _candidateDominance,
       evaluateStructuralMajor: _evaluateStructuralMajor,
