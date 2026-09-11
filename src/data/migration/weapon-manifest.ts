@@ -24,12 +24,12 @@ export const WEAPON_MANIFEST: readonly WeaponManifestEntry[] = [
   { id: "svdm", name: "SVDM", classId: "dmrs", categoryId: "dmr", archetype: "DMR_SEMIAUTO", migrationBatch: 1 },
   { id: "m39-emr", name: "M39 EMR", classId: "dmrs", categoryId: "dmr", archetype: "DMR_SEMIAUTO", migrationBatch: 1 },
 
-  { id: "m4a1", name: "M4A1", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
-  { id: "ak-205", name: "AK-205", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
-  { id: "nvo-228", name: "NVO-228", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
-  { id: "m433", name: "M433", classId: "carbines", categoryId: "carbines", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
+  { id: "m4a1", name: "M4A1", classId: "carbines", categoryId: "carbines", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
+  { id: "ak-205", name: "AK-205", classId: "carbines", categoryId: "carbines", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
   { id: "qbz-192", name: "QBZ-192", classId: "carbines", categoryId: "carbines", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
-  { id: "tr-7", name: "TR-7", classId: "carbines", categoryId: "carbines", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
+  { id: "m433", name: "M433", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
+  { id: "nvo-228e", name: "NVO-228E", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2, legacyMockId: "nvo-228" },
+  { id: "tr-7", name: "TR-7", classId: "assault-rifles", categoryId: "assault-rifles", archetype: "AUTOMATIC_RIFLE", migrationBatch: 2 },
 
   { id: "pw5a3", name: "PW5A3", classId: "smgs", categoryId: "smt", archetype: "SMG", migrationBatch: 3 },
   { id: "scw-10", name: "SCW-10", classId: "smgs", categoryId: "smt", archetype: "SMG", migrationBatch: 3 },
