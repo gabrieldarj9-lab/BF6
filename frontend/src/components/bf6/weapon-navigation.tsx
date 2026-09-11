@@ -26,6 +26,7 @@ export function WeaponNavigation({
   if (!selectedClass) return null
 
   const selectedClassWeapons = getWeaponsForClass(catalog, selectedClass.id)
+  const sourceBackedCount = catalog.weapons.filter((weapon) => weapon.dataStatus === "source-backed").length
 
   return (
     <aside className="border-b bg-sidebar lg:min-h-[calc(100vh-3.5rem)] lg:border-r lg:border-b-0">
@@ -128,7 +129,9 @@ export function WeaponNavigation({
           </nav>
 
           <div className="mt-4 border-t px-2 pt-4">
-            <p className="text-[11px] leading-4 text-muted-foreground">Catálogo mockado para validar navegação e apresentação. Build e métricas continuam desacopladas na fixture do engine.</p>
+            <p className="text-[11px] leading-4 text-muted-foreground">
+              Catálogo em migração: {sourceBackedCount} arma{sourceBackedCount === 1 ? "" : "s"} já usa dados source-backed. As demais continuam mockadas até a validação dos dados reais.
+            </p>
           </div>
         </div>
       </div>
