@@ -15,10 +15,12 @@ const assert = {
 };
 
 import { generateWeaponProgression } from "../src/api/generate-weapon-progression";
-import { integrationFixtureRequest } from "../src/fixtures/integration-fixture";
-import { resolveBuildState } from "../src/resolver/resolve-build";
-import { deriveMetric } from "../src/metrics/derive-metrics";
 import { generateCandidates } from "../src/candidate/generate-candidates";
+import { inspectWeaponEngineReadiness } from "../src/data/engine-materialization";
+import { svk86WeaponRecord } from "../src/data/weapons/svk-86";
+import { integrationFixtureRequest } from "../src/fixtures/integration-fixture";
+import { deriveMetric } from "../src/metrics/derive-metrics";
+import { resolveBuildState } from "../src/resolver/resolve-build";
 
 // 1. Resolver: efeitos diretos realmente alteram a arma a partir do baseline.
 {
@@ -135,6 +137,32 @@ import { generateCandidates } from "../src/candidate/generate-candidates";
 
   // O charm sem efeito foi removido pela poda estrutural configurada.
   assert.ok(result.generationStatsByMastery[1].dominatedRemoved > 0);
+}
+
+// 5. Dados reais são aceitos no catálogo, mas não chegam ao engine antes de
+//    custos, unlocks, baseline e efeitos estarem reconciliados.
+{
+  assert.equal(svk86WeaponRecord.name, "SVK-8.6");
+  assert.equal(svk86WeaponRecord.categoryId, "dmr");
+  assert.equal(svk86WeaponRecord.budget, 100);
+  assert.equal(svk86WeaponRecord.careerUnlockLevel, 33);
+  assert.equal(svk86WeaponRecord.mastery.maxRank, 50);
+
+  const lowProfileStubby = svk86WeaponRecord.attachments.find(
+    (attachment) => attachment.name === "LOW-PROFILE STUBBY",
+  );
+  assert.ok(lowProfileStubby);
+  assert.equal(lowProfileStubby?.costPoints, 45);
+  assert.equal(lowProfileStubby?.unlock.type, "MASTERY");
+  if (lowProfileStubby?.unlock.type === "MASTERY") {
+    assert.equal(lowProfileStubby.unlock.level, 27);
+  }
+
+  const readiness = inspectWeaponEngineReadiness(svk86WeaponRecord);
+  assert.equal(readiness.ready, false);
+  assert.ok(readiness.diagnostics.some((message) => message.includes("technical baseline")));
+  assert.ok(readiness.diagnostics.some((message) => message.includes("conflicting source values for fire.rpm")));
+  assert.ok(readiness.diagnostics.some((message) => message.includes("unverified engine effects")));
 }
 
 console.log("OK: integration tests passed end-to-end.");
