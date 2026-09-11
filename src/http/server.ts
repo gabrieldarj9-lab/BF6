@@ -17,25 +17,11 @@ export interface HttpServerOptions {
   serveUi?: boolean;
 }
 
-function sendText(
-  response: ServerResponse,
-  status: number,
-  contentType: string,
-  body: string,
-  cacheControl = "no-store",
-) {
-  response.statusCode = status;
-  response.setHeader("content-type", `${contentType}; charset=utf-8`);
-  response.setHeader("cache-control", cacheControl);
-  response.setHeader("x-content-type-options", "nosniff");
-  response.end(body);
-}
-
 function sendStatic(
   response: ServerResponse,
   status: number,
   contentType: string,
-  body: Buffer,
+  body: string,
   cacheControl: string,
 ) {
   response.statusCode = status;
@@ -55,14 +41,8 @@ function contentTypeFor(file: string): string {
     case ".js": return "application/javascript; charset=utf-8";
     case ".css": return "text/css; charset=utf-8";
     case ".json": return "application/json; charset=utf-8";
-    case ".svg": return "image/svg+xml";
-    case ".png": return "image/png";
-    case ".jpg":
-    case ".jpeg": return "image/jpeg";
-    case ".webp": return "image/webp";
-    case ".woff2": return "font/woff2";
-    case ".woff": return "font/woff";
-    default: return "application/octet-stream";
+    case ".svg": return "image/svg+xml; charset=utf-8";
+    default: return "text/plain; charset=utf-8";
   }
 }
 
@@ -80,7 +60,7 @@ function tryServeUi(path: string, response: ServerResponse): boolean {
   if (path === "/" || path === "/design-system") {
     try {
       const file = resolve(uiRoot, "index.html");
-      const body = readFileSync(file);
+      const body = readFileSync(file, "utf8");
       setUiSecurityHeaders(response);
       sendStatic(response, 200, contentTypeFor(file), body, "no-store");
       return true;
@@ -103,7 +83,7 @@ function tryServeUi(path: string, response: ServerResponse): boolean {
   if (!file.startsWith(allowedPrefix)) return false;
 
   try {
-    const body = readFileSync(file);
+    const body = readFileSync(file, "utf8");
     sendStatic(response, 200, contentTypeFor(file), body, "public, max-age=31536000, immutable");
     return true;
   } catch {
