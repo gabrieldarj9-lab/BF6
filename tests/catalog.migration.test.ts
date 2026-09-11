@@ -7,6 +7,7 @@ const assert = {
   },
 };
 
+import { buildSourceBackedWeaponBatch } from "../src/data/migration/batch-builder";
 import { getCatalogMigrationReport } from "../src/data/migration/catalog-report";
 import { WEAPON_MANIFEST } from "../src/data/migration/weapon-manifest";
 
@@ -33,6 +34,42 @@ import { WEAPON_MANIFEST } from "../src/data/migration/weapon-manifest";
   assert.ok(svdm?.catalogValid);
   assert.equal(svdm?.engineReady, false);
   assert.equal(m39?.sourceBacked, false);
+}
+
+// O builder permite cadastrar um lote declarativamente sem repetir budget,
+// mastery, ids derivados, sourceIds e effects=null em cada acessório.
+{
+  const [weapon] = buildSourceBackedWeaponBatch([
+    {
+      id: "fixture-batch-weapon",
+      name: "Fixture Batch Weapon",
+      categoryId: "dmr",
+      slots: [{ id: "scope", maxEquipped: 1 }],
+      sources: [{
+        id: "fixture-source",
+        kind: "OTHER",
+        title: "Fixture source",
+        url: "https://example.com/fixture",
+        observedAt: "2026-09-11",
+      }],
+      defaultAttachmentSourceIds: ["fixture-source"],
+      attachments: [{
+        name: "TEST OPTIC 2.00X",
+        slotId: "scope",
+        costPoints: 10,
+        unlock: { type: "DEFAULT", label: "Disponível por padrão" },
+      }],
+      baseStatEvidence: [],
+    },
+  ]);
+
+  assert.ok(weapon);
+  assert.equal(weapon!.budget, 100);
+  assert.equal(weapon!.mastery.minRank, 0);
+  assert.equal(weapon!.mastery.maxRank, 50);
+  assert.equal(weapon!.attachments[0]?.id, "fixture-batch-weapon-test-optic-2-00x");
+  assert.equal(weapon!.attachments[0]?.sourceIds[0], "fixture-source");
+  assert.equal(weapon!.attachments[0]?.effects, null);
 }
 
 console.log("OK: catalog migration coverage test passed.");
