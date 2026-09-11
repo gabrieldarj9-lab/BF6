@@ -1,4 +1,21 @@
-import type { CatalogWeapon, WeaponAccessoryPreview, WeaponCatalog } from "@/features/catalog/model"
+import type {
+  CatalogWeapon,
+  WeaponAccessoryPreview,
+  WeaponCatalog,
+  WeaponMasteryProgression,
+} from "@/features/catalog/model"
+
+const COMPLETE_WEAPON_MASTERY: WeaponMasteryProgression = {
+  minRank: 1,
+  maxRank: 50,
+  milestones: [
+    { rank: 10, tier: "Bronze" },
+    { rank: 20, tier: "Prata" },
+    { rank: 30, tier: "Ouro" },
+    { rank: 40, tier: "Platina" },
+    { rank: 50, tier: "Elite" },
+  ],
+}
 
 function thumbnail(name: string) {
   return {
@@ -11,7 +28,7 @@ function accessories(items: Array<[string, string, string, string]>): WeaponAcce
   return items.map(([id, slotId, slotLabel, name]) => ({ id, slotId, slotLabel, name }))
 }
 
-const weapons: CatalogWeapon[] = [
+const weaponDefinitions: Array<Omit<CatalogWeapon, "mastery">> = [
   {
     id: "m4a1",
     name: "M4A1",
@@ -325,6 +342,14 @@ const weapons: CatalogWeapon[] = [
     ]),
   },
 ]
+
+const weapons: CatalogWeapon[] = weaponDefinitions.map((weapon) => ({
+  ...weapon,
+  mastery: {
+    ...COMPLETE_WEAPON_MASTERY,
+    milestones: COMPLETE_WEAPON_MASTERY.milestones.map((milestone) => ({ ...milestone })),
+  },
+}))
 
 export const MOCK_WEAPON_CATALOG: WeaponCatalog = {
   classes: [
