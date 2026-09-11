@@ -17,6 +17,7 @@ Nunca preencher um valor desconhecido apenas para tornar uma arma `engineReady`.
 - `src/data/migration/weapon-manifest.ts`: lista canônica das 24 armas, IDs, classes, arquétipos e lotes.
 - `src/data/source-backed-weapons.ts`: registry dos registros source-backed já migrados.
 - `src/data/weapons/*`: evidências e dados source-backed atualmente reconciliados por arma.
+- `src/data/migration/batch-builder.ts`: compila lotes declarativos e aplica defaults seguros de budget, mastery, IDs, sources e effects.
 - `src/data/migration/validate-catalog.ts`: validações estruturais obrigatórias.
 - `src/data/migration/catalog-report.ts`: cobertura, pendências e próximo lote.
 
@@ -25,13 +26,24 @@ Nunca preencher um valor desconhecido apenas para tornar uma arma `engineReady`.
 1. Selecionar todas as armas do lote no manifesto.
 2. Confirmar identidade/nome/ID antes de reutilizar qualquer dado do mock.
 3. Coletar as fontes em paralelo para todas as armas do lote.
-4. Registrar primeiro os dados de catálogo: classe, budget, mastery, slots, acessórios, custos e unlocks.
-5. Manter `costPoints: null`, `UNKNOWN` ou `effects: null` quando a evidência não for suficiente.
-6. Adicionar os registros ao registry source-backed.
-7. Rodar `npm run catalog:report`.
-8. Corrigir qualquer `Structural errors > 0` antes de continuar.
-9. Rodar `npm run verify` e exigir CI verde.
-10. Validar no navegador que sidebar e WeaponHeader consomem o registro source-backed e que a fixture do engine não aparece para uma arma com `engineReady: false`.
+4. Montar drafts declarativos do lote com `buildSourceBackedWeaponBatch`, em vez de repetir factories e boilerplate por arma.
+5. Registrar primeiro os dados de catálogo: classe, budget, mastery, slots, acessórios, custos e unlocks.
+6. Manter `costPoints: null`, `UNKNOWN` ou `effects: null` quando a evidência não for suficiente.
+7. Adicionar o lote compilado ao registry source-backed.
+8. Rodar `npm run catalog:report`.
+9. Corrigir qualquer `Structural errors > 0` antes de continuar.
+10. Rodar `npm run verify` e exigir CI verde.
+11. Validar no navegador que sidebar e WeaponHeader consomem o registro source-backed e que a fixture do engine não aparece para uma arma com `engineReady: false`.
+
+O batch builder assume por padrão:
+
+- `budget = 100`;
+- `mastery = M0 interno até M50`, normalizado para M1-M50 na API pública;
+- `attachment.id = {weaponId}-{slug(name)}` quando não informado;
+- `effects = null` quando ainda não verificado;
+- `sourceIds` herdados do lote quando configurados em `defaultAttachmentSourceIds`.
+
+Esses defaults reduzem repetição, mas nunca substituem evidência: custos, unlocks e efeitos continuam explícitos quando conhecidos.
 
 ## O que o CI bloqueia
 
