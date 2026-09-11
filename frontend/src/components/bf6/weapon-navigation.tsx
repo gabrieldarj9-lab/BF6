@@ -1,10 +1,13 @@
 import { Check, ChevronDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import type { MockWeaponClassNavItem } from "@/features/catalog/mock-navigation"
+import {
+  getWeaponsForClass,
+  type WeaponCatalog,
+} from "@/features/catalog/model"
 
 type WeaponNavigationProps = {
-  classes: MockWeaponClassNavItem[]
+  catalog: WeaponCatalog
   selectedClassId: string
   selectedWeaponId: string
   onSelectClass: (classId: string) => void
@@ -12,15 +15,17 @@ type WeaponNavigationProps = {
 }
 
 export function WeaponNavigation({
-  classes,
+  catalog,
   selectedClassId,
   selectedWeaponId,
   onSelectClass,
   onSelectWeapon,
 }: WeaponNavigationProps) {
-  const selectedClass = classes.find((item) => item.id === selectedClassId) ?? classes[0]
+  const selectedClass = catalog.classes.find((item) => item.id === selectedClassId) ?? catalog.classes[0]
 
   if (!selectedClass) return null
+
+  const selectedClassWeapons = getWeaponsForClass(catalog, selectedClass.id)
 
   return (
     <aside className="border-b bg-sidebar lg:min-h-[calc(100vh-3.5rem)] lg:border-r lg:border-b-0">
@@ -28,7 +33,7 @@ export function WeaponNavigation({
         <div className="border-b p-3 lg:hidden">
           <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Classes</p>
           <nav className="flex gap-1 overflow-x-auto pb-1" aria-label="Classes de arma">
-            {classes.map((item) => (
+            {catalog.classes.map((item) => (
               <Button
                 key={item.id}
                 type="button"
@@ -47,10 +52,10 @@ export function WeaponNavigation({
         <div className="p-3 lg:hidden">
           <div className="mb-2 flex items-center justify-between px-1">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Armas</p>
-            <span className="font-data text-[11px] text-muted-foreground">{selectedClass.weapons.length}</span>
+            <span className="font-data text-[11px] text-muted-foreground">{selectedClassWeapons.length}</span>
           </div>
           <nav className="flex gap-1 overflow-x-auto pb-1" aria-label={`Armas em ${selectedClass.label}`}>
-            {selectedClass.weapons.map((weapon) => {
+            {selectedClassWeapons.map((weapon) => {
               const active = weapon.id === selectedWeaponId
               return (
                 <Button
@@ -73,8 +78,10 @@ export function WeaponNavigation({
         <div className="hidden p-4 lg:block">
           <p className="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Classes de arma</p>
           <nav className="space-y-1" aria-label="Classes e armas">
-            {classes.map((item) => {
+            {catalog.classes.map((item) => {
               const classActive = item.id === selectedClassId
+              const classWeapons = getWeaponsForClass(catalog, item.id)
+
               return (
                 <div key={item.id}>
                   <Button
@@ -86,14 +93,14 @@ export function WeaponNavigation({
                   >
                     <span>{item.label}</span>
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <span className="font-data">{String(item.weapons.length).padStart(2, "0")}</span>
+                      <span className="font-data">{String(classWeapons.length).padStart(2, "0")}</span>
                       <ChevronDown className={`size-3.5 transition-transform ${classActive ? "rotate-180" : ""}`} />
                     </span>
                   </Button>
 
                   {classActive ? (
                     <div className="mt-1 border-l pl-2" role="group" aria-label={`Armas em ${item.label}`}>
-                      {item.weapons.map((weapon) => {
+                      {classWeapons.map((weapon) => {
                         const active = weapon.id === selectedWeaponId
                         return (
                           <Button
@@ -109,7 +116,7 @@ export function WeaponNavigation({
                               <span className={`size-1.5 shrink-0 rounded-full ${active ? "bg-primary" : "bg-border"}`} />
                               <span className="truncate">{weapon.name}</span>
                             </span>
-                            <span className="ml-2 truncate text-[11px] text-muted-foreground">{weapon.profile}</span>
+                            <span className="ml-2 truncate text-[11px] text-muted-foreground">{weapon.usageProfile}</span>
                           </Button>
                         )
                       })}
@@ -121,7 +128,7 @@ export function WeaponNavigation({
           </nav>
 
           <div className="mt-4 border-t px-2 pt-4">
-            <p className="text-[11px] leading-4 text-muted-foreground">Catálogo mockado para validar a navegação. A build ainda usa a fixture do engine.</p>
+            <p className="text-[11px] leading-4 text-muted-foreground">Catálogo mockado para validar navegação e apresentação. Build e métricas continuam desacopladas na fixture do engine.</p>
           </div>
         </div>
       </div>
