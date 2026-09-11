@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" role="img" aria-labelledby="title desc">
+  <title id="title">Thumbnail genérica de arma</title>
+  <desc id="desc">Silhueta lateral estilizada de um fuzil fictício usada como placeholder visual no catálogo mockado.</desc>
+  <g fill="none" fill-rule="evenodd">
+    <path fill="#18181b" d="M0 0h900v320H0z"/>
+    <path fill="#27272a" d="M66 82h768v156H66z" rx="20"/>
+    <g transform="translate(120 96)">
+      <path fill="#d4d4d8" d="M92 40h286l40 18h110l20 12h80v20h-86l-22 16H398l-22 22H248l-20 26h-58l14-26H92L62 96H8V72h66z"/>
+      <path fill="#a1a1aa" d="M240 128h56l18 68h-44l-16-46h-32zm224-22h52l-18 62h-44zM84 40h76l-18-24h-42z"/>
+      <path fill="#71717a" d="M176 30h118v16H176zm170 12h70v14h-70zm118 46h92v12h-92z"/>
+      <path fill="#f97316" d="M386 60h28v8h-28zm-230 54h34v8h-34z"/>
+      <circle cx="222" cy="86" r="11" fill="#09090b"/>
+      <path fill="#52525b" d="M528 58h94l18 12v20h-32V76h-80z"/>
+    </g>
+  </g>
+</svg>
