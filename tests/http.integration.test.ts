@@ -101,7 +101,43 @@ async function main() {
       assert.equal(body.data.metrics["ttk.10m"].evidence, "DERIVED_EXACT");
     }
 
-    // 4. Structural input validation returns machine-readable 422 issues.
+    // 4. Source-backed catalog exposes both migrated DMRs with stable IDs.
+    {
+      const response = await fetch(`${baseUrl}/v1/catalog`);
+      const body = await response.json() as {
+        data: {
+          weapons: Array<{
+            id: string;
+            name: string;
+            classId: string;
+            budgetPoints: number;
+            dataStatus: string;
+            engineReady: boolean;
+            mastery: { minRank: number; maxRank: number };
+            accessories: Array<{ name: string; slotId: string; costPoints: number | null }>;
+          }>;
+        };
+      };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.data.weapons.length, 2);
+
+      const svk = body.data.weapons.find((weapon) => weapon.id === "svk-86");
+      const svdm = body.data.weapons.find((weapon) => weapon.id === "svdm");
+      assert.ok(svk);
+      assert.ok(svdm);
+      assert.equal(svdm?.name, "SVDM");
+      assert.equal(svdm?.classId, "dmrs");
+      assert.equal(svdm?.budgetPoints, 100);
+      assert.equal(svdm?.dataStatus, "source-backed");
+      assert.equal(svdm?.engineReady, false);
+      assert.equal(svdm?.mastery.minRank, 1);
+      assert.equal(svdm?.mastery.maxRank, 50);
+      assert.ok(svdm?.accessories.some((item) => item.name === "IMPROVED MAG CATCH" && item.slotId === "ergonomics"));
+      assert.ok(svdm?.accessories.some((item) => item.name === "620MM CLASSIC" && item.costPoints === null));
+    }
+
+    // 5. Structural input validation returns machine-readable 422 issues.
     {
       const response = await fetch(`${baseUrl}/v1/progression`, {
         method: "POST",
@@ -118,7 +154,7 @@ async function main() {
       assert.ok(body.error.issues?.some((item) => item.path === "$.primaryProfile"));
     }
 
-    // 5. Unknown attachment is rejected before reaching metric resolution.
+    // 6. Unknown attachment is rejected before reaching metric resolution.
     {
       const response = await fetch(`${baseUrl}/v1/metrics`, {
         method: "POST",
@@ -138,7 +174,7 @@ async function main() {
       assert.ok(body.error.issues?.some((item) => item.code === "UNKNOWN_REFERENCE"));
     }
 
-    // 6. Invalid JSON is a transport/input error, not a 500.
+    // 7. Invalid JSON is a transport/input error, not a 500.
     {
       const response = await fetch(`${baseUrl}/v1/progression`, {
         method: "POST",
@@ -150,7 +186,7 @@ async function main() {
       assert.equal(body.error.code, "INVALID_JSON");
     }
 
-    // 7. Oversized bodies are rejected deterministically.
+    // 8. Oversized bodies are rejected deterministically.
     {
       const response = await fetch(`${baseUrl}/v1/progression`, {
         method: "POST",
@@ -162,7 +198,7 @@ async function main() {
       assert.equal(body.error.code, "PAYLOAD_TOO_LARGE");
     }
 
-    // 8. Media type and routing errors are explicit.
+    // 9. Media type and routing errors are explicit.
     {
       const response = await fetch(`${baseUrl}/v1/metrics`, {
         method: "POST",
