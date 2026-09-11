@@ -1,68 +1,84 @@
 # BF6 Builds — Design System V1
 
+## Fundação técnica
+
+O frontend usa **shadcn/ui real**, com componentes source-owned gerados pelo CLI oficial e versionados dentro do próprio projeto.
+
+Stack atual:
+
+- React 19 + TypeScript;
+- Vite;
+- Tailwind CSS v4;
+- shadcn/ui, estilo `new-york`;
+- Radix UI para primitives interativos;
+- Lucide React como única família de ícones.
+
+A configuração do shadcn fica em `frontend/components.json`. Os componentes gerados ficam em `frontend/src/components/ui/`. Eles podem ser adaptados pelo projeto quando necessário, mas não devem ser substituídos por uma segunda biblioteca caseira com a mesma função.
+
+Os tokens e o tema BF6 ficam centralizados em `frontend/src/index.css`. A personalização visual deve acontecer primeiro nesses tokens e, quando necessário, nos próprios componentes source-owned do shadcn.
+
 ## Direção
 
 A interface é escura, técnica, tática, contemporânea e orientada a dados. A referência é a linguagem de menus de jogos modernos, equipamento e informação tática, sem reproduzir uma HUD literal.
 
-A fundação técnica desta primeira interface é React + TypeScript, com Tailwind CSS no browser para utilidades e primitives source-owned inspiradas no modelo do shadcn/ui. Base UI fica reservado para componentes interativos que realmente precisem de comportamento headless mais complexo; não foi necessário para a primeira tela.
+Regras visuais:
 
-## Regras visuais
-
-- sem glassmorphism, backdrop blur ou superfícies translúcidas decorativas;
+- sem glassmorphism ou blur decorativo aplicado às composições do produto;
 - sem glow/neon;
-- sem gradientes gratuitos;
-- sem sombras grandes;
-- radius contido: 2, 4 e 6 px;
-- não transformar toda informação em cards ou pills;
+- sem gradientes decorativos;
+- sombras apenas quando fazem parte do comportamento de componentes elevados, como popovers e dialogs;
 - hierarquia por tipografia, espaçamento, borda, alinhamento e contraste;
-- componentes densos, legíveis e com leitura rápida durante o jogo.
+- densidade suficiente para leitura rápida durante o jogo;
+- não transformar toda informação em cards ou pills.
 
-## Tokens
+## Tema e tokens
 
-Tokens globais ficam em `frontend/styles.css` e devem ser reutilizados antes de qualquer valor arbitrário.
+O tema segue o contrato semântico do shadcn (`background`, `foreground`, `card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`) e acrescenta somente aliases necessários ao produto, como `--bf-positive`, `--bf-warning` e `--bf-disabled`.
 
-### Cor
+Cor de destaque atual: `#ff6a2a`.
 
-- `--background`: fundo principal;
-- `--surface`: superfície padrão;
-- `--surface-elevated`: superfície elevada;
-- `--border` / `--border-strong`;
-- `--text-primary` / `--text-secondary` / `--text-muted`;
-- `--accent`: destaque e interação principal;
-- `--positive`, `--warning`, `--negative`, `--disabled`.
+A escala de espaçamento usada nas composições segue principalmente 4, 8, 12, 16, 20, 24, 32, 40 e 48 px. O radius base é controlado por `--radius` e alimenta as variantes do Tailwind/shadcn.
 
-### Estrutura
+## Componentes instalados
 
-- spacing: 4, 8, 12, 16, 20, 24, 32, 40 e 48 px;
-- radius: 2, 4 e 6 px;
-- motion: 120 e 180 ms;
-- conteúdo máximo: 1512 px.
+A V1 possui componentes shadcn source-owned para:
 
-## Estados
+- Button;
+- Input e Label;
+- Select;
+- Tabs;
+- Badge;
+- Card;
+- Table;
+- Tooltip;
+- Progress;
+- Skeleton;
+- Alert;
+- Separator;
+- Dialog;
+- Sheet;
+- Dropdown Menu;
+- Popover;
+- Slider.
 
-A base já contempla default, hover, focus-visible, active/selected, disabled/indisponível, loading e error. `prefers-reduced-motion` é respeitado.
+Novos componentes genéricos devem ser adicionados pelo registry do shadcn quando houver equivalente adequado, em vez de recriados do zero.
 
-## Primeira página representativa
+## Showcase vivo
 
-A tela de arma valida o sistema antes de expandi-lo:
+A rota `/design-system` é a referência visual central. Ela importa os mesmos arquivos de `frontend/src/components/ui/` usados pelo produto e demonstra tokens, variantes, estados e pequenas composições.
 
-- navegação por categoria de arma;
-- cabeçalho da arma e prioridade;
-- controle de maestria;
-- build recomendada e orçamento;
-- acessórios por slot;
-- métricas resolvidas;
-- timeline de progressão;
-- mudança Sai/Entra;
-- estados de API, loading e erro;
-- layout responsivo desktop/tablet/mobile.
+O showcase não possui regras de negócio, lógica de builds ou chamadas próprias à API.
 
-## Integração
+## Integração do produto
 
-A UI não implementa regras de negócio. Ela consome:
+A interface principal continua consumindo:
 
-- `GET /v1/demo-request` apenas para a fixture da V1 visual;
-- `POST /v1/progression` para a progressão;
+- `GET /v1/demo-request` para a fixture visual da V1;
+- `POST /v1/progression` para progressão;
 - `POST /v1/metrics` para métricas da build selecionada.
 
-Quando o catálogo real substituir a fixture, o Design System e os componentes não devem precisar conhecer as regras do engine.
+O engine permanece separado do frontend. A troca do catálogo fictício por dados reais não deve exigir mudanças na fundação do Design System.
+
+## Qualidade
+
+`npm run verify` cobre typecheck, build do Vite, integração do engine, HTTP, UI e demo. O build de produção não depende de React ou Tailwind via CDN.
